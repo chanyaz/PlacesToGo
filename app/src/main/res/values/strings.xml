@@ -1,0 +1,358 @@
+<resources>
+    <string name="app_name">Places To Go</string>
+
+    <string name="android_api_key">AIzaSyAWa5awr3yQvOln24gBkAQxCjEfkXBxFyI</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="no_internet_connection_message">No internet connection</string>
+
+    <string name="menu_favorite">Favorite</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_maps">Maps</string>
+    <string name="menu_item_communication">Communicate</string>
+    <string name="menu_share">Share</string>
+
+    <!-- Share content -->
+    <string name="share_type">text/plain</string>
+    <string name="share_via">Share via</string>
+    <string name="app_share">Easy to find places with Places to go</string>
+    <string name="place_share">is a good place to go. Place To Go is a great app</string>
+
+    <string name="search_hint_text">Search any places here...</string>
+    <string name="your_location_search">Your location</string>
+    <string name="finding_location_progress">Finding your location...</string>
+
+    <!-- Permissions -->
+    <string name="request_location_permission_message">Location permission is needed to get nearby places</string>
+    <string name="OK">OK</string>
+    <string name="location_permission_granted">Location permission was granted</string>
+    <string name="location_permission_not_granted">Location permission was not granted</string>
+
+    <!-- Google API Client connection handles -->
+    <string name="connection_failed">Connection failed</string>
+    <string name="connection_suspended">Connection suspended</string>
+
+    <!-- Address Lookup Service -->
+    <string name="address_service_unavailable">Service unavailable</string>
+    <string name="no_address_found">No address found</string>
+    <string name="invalid_lat_lon">Invalid latitude and longitude</string>
+
+    <string name="select_a_place_type">Select a place type</string>
+
+    <string name="transition_thumbnail">transition</string>
+
+    <string name="open_now">Open now</string>
+    <string name="closed_now">Closed now</string>
+
+    <string name="address">Address: </string>
+    <string name="phone">Phone: </string>
+    <string name="reviews">Reviews</string>
+    <string name="rating">Rating:</string>
+
+    <!-- Labels for 5 buttons in detail fragment -->
+    <string name="phone_text">Phone</string>
+    <string name="map_text">Map</string>
+    <string name="website_text">Website</string>
+    <string name="uber_text">Uber</string>
+    <string name="share_text">Share</string>
+
+    <string name="phone_is_not_available_message">Phone is not available</string>
+    <string name="website_is_not_available_message">Website is not available</string>
+
+    <string name="uber_requires_install">You don not have Uber. Would you like to install?</string>
+
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <string name="cancel">Cancel</string>
+
+    <!-- Main view: types of places to be displayed -->
+    <string name="restaurant">Restaurant</string>
+    <string name="cafe">Cafe</string>
+    <string name="takeaway">Takeaway</string>
+    <string name="convenience_store">Store</string>
+    <string name="bus_station">Bus station</string>
+    <string name="more">More</string>
+
+    <string name="accounting_label">Accounting</string>
+    <string name="airport_label">Airport</string>
+    <string name="amusement_park_label">Amusement Park</string>
+    <string name="aquarium_label">Aquarium</string>
+    <string name="art_gallery_label">Art Gallery</string>
+    <string name="atm_label">ATM</string>
+    <string name="bakery_label">Bakery</string>
+    <string name="bank_label">Bank</string>
+    <string name="bar_label">Bar</string>
+    <string name="beauty_salon_label">Beauty Salon</string>
+    <string name="bicycle_store_label">Bicycle Store</string>
+    <string name="book_store_label">Book Store</string>
+    <string name="bowling_alley_label">Bowling Alley</string>
+    <string name="bus_station_label">Bus Station</string>
+    <string name="cafe_label">Cafe</string>
+    <string name="campground_label">Campground</string>
+    <string name="car_dealer_label">Car Dealer</string>
+    <string name="car_rental_label">Car Rental</string>
+    <string name="car_repair_label">Car Repair</string>
+    <string name="car_wash_label">Car Wash</string>
+    <string name="casino_label">Casino</string>
+    <string name="cemetery_label">Cemetery</string>
+    <string name="church_label">Church</string>
+    <string name="city_hall_label">City Hall</string>
+    <string name="clothing_store_label">Clothing Store</string>
+    <string name="convenience_store_label">Convenience Store</string>
+    <string name="courthouse_label">Courthouse</string>
+    <string name="dentist_label">Dentist</string>
+    <string name="department_store_label">Department Store</string>
+    <string name="doctor_label">Doctor</string>
+    <string name="electrician_label">Electrician</string>
+    <string name="electronics_store_label">Electronics Store</string>
+    <string name="embassy_label">Embassy</string>
+    <string name="fire_station_label">Fire Station</string>
+    <string name="florist_label">Florist</string>
+    <string name="funeral_home_label">Funeral Home</string>
+    <string name="furniture_store_label">Furniture Store</string>
+    <string name="gas_station_label">Gas Station</string>
+    <string name="gym_label">Gym</string>
+    <string name="hair_care_label">Hair Care</string>
+    <string name="hardware_store_label">Hardware Store</string>
+    <string name="hindu_temple_label">Hindu Temple</string>
+    <string name="home_goods_store_label">Home Goods Store</string>
+    <string name="hospital_label">Hospital</string>
+    <string name="insurance_agency_label">Insurance Agency</string>
+    <string name="jewelry_store_label">Jewelry Store</string>
+    <string name="laundry_label">Laundry</string>
+    <string name="lawyer_label">Lawyer</string>
+    <string name="library_label">Library</string>
+    <string name="liquor_store_label">Liquor Store</string>
+    <string name="local_government_office_label">Local Government Office</string>
+    <string name="locksmith_label">Locksmith</string>
+    <string name="lodging_label">Lodging</string>
+    <string name="meal_delivery_label">Meal Delivery</string>
+    <string name="meal_takeaway_label">Meal Takeaway</string>
+    <string name="mosque_label">Mosque</string>
+    <string name="movie_rental_label">Movie Rental</string>
+    <string name="movie_theater_label">Movie Theater</string>
+    <string name="moving_company_label">Moving Company</string>
+    <string name="museum_label">Museum</string>
+    <string name="night_club_label">Night Club</string>
+    <string name="painter_label">Painter</string>
+    <string name="park_label">Park</string>
+    <string name="parking_label">Parking</string>
+    <string name="pet_store_label">Pet Store</string>
+    <string name="pharmacy_label">Pharmacy</string>
+    <string name="physiotherapist_label">Physiotherapist</string>
+    <string name="plumber_label">Plumber</string>
+    <string name="police_label">Police</string>
+    <string name="post_office_label">Post Office</string>
+    <string name="real_estate_agency_label">Real Estate Agency</string>
+    <string name="restaurant_label">Restaurant</string>
+    <string name="roofing_contractor_label">Roofing Contractor</string>
+    <string name="rv_park_label">Rv Park</string>
+    <string name="school_label">School</string>
+    <string name="shoe_store_label">Shoe Store</string>
+    <string name="shopping_mall_label">Shopping Mall</string>
+    <string name="spa_label">Spa</string>
+    <string name="stadium_label">Stadium</string>
+    <string name="storage_label">Storage</string>
+    <string name="store_label">Store</string>
+    <string name="subway_station_label">Subway Station</string>
+    <string name="synagogue_label">Synagogue</string>
+    <string name="taxi_stand_label">Taxi Stand</string>
+    <string name="train_station_label">Train Station</string>
+    <string name="transit_station_label">Transit Station</string>
+    <string name="travel_agency_label">Travel Agency</string>
+    <string name="university_label">University</string>
+    <string name="veterinary_care_label">Veterinary Care</string>
+    <string name="zoo_label">Zoo</string>
+
+    <string name="place_types">Place types</string>
+    <string name="search">Search</string>
+    <string name="location_unavailable">Your location is unavailable</string>
+
+    <string name="accounting_value">accounting</string>
+    <string name="airport_value">airport</string>
+    <string name="amusement_park_value">amusement_park</string>
+    <string name="aquarium_value">aquarium</string>
+    <string name="art_gallery_value">art_gallery</string>
+    <string name="atm_value">atm</string>
+    <string name="bakery_value">bakery</string>
+    <string name="bank_value">bank</string>
+    <string name="bar_value">bar</string>
+    <string name="beauty_salon_value">beauty_salon</string>
+    <string name="bicycle_store_value">bicycle_store</string>
+    <string name="book_store_value">book_store</string>
+    <string name="bowling_alley_value">bowling_alley</string>
+    <string name="bus_station_value">bus_station</string>
+    <string name="cafe_value">cafe</string>
+    <string name="campground_value">campground</string>
+    <string name="car_dealer_value">car_dealer</string>
+    <string name="car_rental_value">car_rental</string>
+    <string name="car_repair_value">car_repair</string>
+    <string name="car_wash_value">car_wash</string>
+    <string name="casino_value">casino</string>
+    <string name="cemetery_value">cemetery</string>
+    <string name="church_value">church</string>
+    <string name="city_hall_value">city_hall</string>
+    <string name="clothing_store_value">clothing_store</string>
+    <string name="convenience_store_value">convenience_store</string>
+    <string name="courthouse_value">courthouse</string>
+    <string name="dentist_value">dentist</string>
+    <string name="department_store_value">department_store</string>
+    <string name="doctor_value">doctor</string>
+    <string name="electrician_value">electrician</string>
+    <string name="electronics_store_value">electronics_store</string>
+    <string name="embassy_value">embassy</string>
+    <string name="fire_station_value">fire_station</string>
+    <string name="florist_value">florist</string>
+    <string name="funeral_home_value">funeral_home</string>
+    <string name="furniture_store_value">furniture_store</string>
+    <string name="gas_station_value">gas_station</string>
+    <string name="gym_value">gym</string>
+    <string name="hair_care_value">hair_care</string>
+    <string name="hardware_store_value">hardware_store</string>
+    <string name="hindu_temple_value">hindu_temple</string>
+    <string name="home_goods_store_value">home_goods_store</string>
+    <string name="hospital_value">hospital</string>
+    <string name="insurance_agency_value">insurance_agency</string>
+    <string name="jewelry_store_value">jewelry_store</string>
+    <string name="laundry_value">laundry</string>
+    <string name="lawyer_value">lawyer</string>
+    <string name="library_value">library</string>
+    <string name="liquor_store_value">liquor_store</string>
+    <string name="local_government_office_value">local_government_office</string>
+    <string name="locksmith_value">locksmith</string>
+    <string name="lodging_value">lodging</string>
+    <string name="meal_delivery_value">meal_delivery</string>
+    <string name="meal_takeaway_value">meal_takeaway</string>
+    <string name="mosque_value">mosque</string>
+    <string name="movie_rental_value">movie_rental</string>
+    <string name="movie_theater_value">movie_theater</string>
+    <string name="moving_company_value">moving_company</string>
+    <string name="museum_value">museum</string>
+    <string name="night_club_value">night_club</string>
+    <string name="painter_value">painter</string>
+    <string name="park_value">park</string>
+    <string name="parking_value">parking</string>
+    <string name="pet_store_value">pet_store</string>
+    <string name="pharmacy_value">pharmacy</string>
+    <string name="physiotherapist_value">physiotherapist</string>
+    <string name="plumber_value">plumber</string>
+    <string name="police_value">police</string>
+    <string name="post_office_value">post_office</string>
+    <string name="real_estate_agency_value">real_estate_agency</string>
+    <string name="restaurant_value">restaurant</string>
+    <string name="roofing_contractor_value">roofing_contractor</string>
+    <string name="rv_park_value">rv_park</string>
+    <string name="school_value">school</string>
+    <string name="shoe_store_value">shoe_store</string>
+    <string name="shopping_mall_value">shopping_mall</string>
+    <string name="spa_value">spa</string>
+    <string name="stadium_value">stadium</string>
+    <string name="storage_value">storage</string>
+    <string name="store_value">store</string>
+    <string name="subway_station_value">subway_station</string>
+    <string name="synagogue_value">synagogue</string>
+    <string name="taxi_stand_value">taxi_stand</string>
+    <string name="train_station_value">train_station</string>
+    <string name="transit_station_value">transit_station</string>
+    <string name="travel_agency_value">travel_agency</string>
+    <string name="university_value">university</string>
+    <string name="veterinary_care_value">veterinary_care</string>
+    <string name="zoo_value">zoo</string>
+
+    <string name="title_activity_detail">DetailActivity</string>
+    <string name="large_text">
+        "Material is the metaphor.\n\n"
+
+        "A material metaphor is the unifying theory of a rationalized space and a system of motion."
+        "The material is grounded in tactile reality, inspired by the study of paper and ink, yet "
+        "technologically advanced and open to imagination and magic.\n"
+        "Surfaces and edges of the material provide visual cues that are grounded in reality. The "
+        "use of familiar tactile attributes helps users quickly understand affordances. Yet the "
+        "flexibility of the material creates new affordances that supercede those in the physical "
+        "world, without breaking the rules of physics.\n"
+        "The fundamentals of light, surface, and movement are key to conveying how objects move, "
+        "interact, and exist in space and in relation to each other. Realistic lighting shows "
+        "seams, divides space, and indicates moving parts.\n\n"
+
+        "Bold, graphic, intentional.\n\n"
+
+        "The foundational elements of print based design typography, grids, space, scale, color, "
+        "and use of imagery guide visual treatments. These elements do far more than please the "
+        "eye. They create hierarchy, meaning, and focus. Deliberate color choices, edge to edge "
+        "imagery, large scale typography, and intentional white space create a bold and graphic "
+        "interface that immerse the user in the experience.\n"
+        "An emphasis on user actions makes core functionality immediately apparent and provides "
+        "waypoints for the user.\n\n"
+
+        "Motion provides meaning.\n\n"
+
+        "Motion respects and reinforces the user as the prime mover. Primary user actions are "
+        "inflection points that initiate motion, transforming the whole design.\n"
+        "All action takes place in a single environment. Objects are presented to the user without "
+        "breaking the continuity of experience even as they transform and reorganize.\n"
+        "Motion is meaningful and appropriate, serving to focus attention and maintain continuity. "
+        "Feedback is subtle yet clear. Transitions are efﬁcient yet coherent.\n\n"
+
+        "3D world.\n\n"
+
+        "The material environment is a 3D space, which means all objects have x, y, and z "
+        "dimensions. The z-axis is perpendicularly aligned to the plane of the display, with the "
+        "positive z-axis extending towards the viewer. Every sheet of material occupies a single "
+        "position along the z-axis and has a standard 1dp thickness.\n"
+        "On the web, the z-axis is used for layering and not for perspective. The 3D world is "
+        "emulated by manipulating the y-axis.\n\n"
+
+        "Light and shadow.\n\n"
+
+        "Within the material environment, virtual lights illuminate the scene. Key lights create "
+        "directional shadows, while ambient light creates soft shadows from all angles.\n"
+        "Shadows in the material environment are cast by these two light sources. In Android "
+        "development, shadows occur when light sources are blocked by sheets of material at "
+        "various positions along the z-axis. On the web, shadows are depicted by manipulating the "
+        "y-axis only. The following example shows the card with a height of 6dp.\n\n"
+
+        "Resting elevation.\n\n"
+
+        "All material objects, regardless of size, have a resting elevation, or default elevation "
+        "that does not change. If an object changes elevation, it should return to its resting "
+        "elevation as soon as possible.\n\n"
+
+        "Component elevations.\n\n"
+
+        "The resting elevation for a component type is consistent across apps (e.g., FAB elevation "
+        "does not vary from 6dp in one app to 16dp in another app).\n"
+        "Components may have different resting elevations across platforms, depending on the depth "
+        "of the environment (e.g., TV has a greater depth than mobile or desktop).\n\n"
+
+        "Responsive elevation and dynamic elevation offsets.\n\n"
+
+        "Some component types have responsive elevation, meaning they change elevation in response "
+        "to user input (e.g., normal, focused, and pressed) or system events. These elevation "
+        "changes are consistently implemented using dynamic elevation offsets.\n"
+        "Dynamic elevation offsets are the goal elevation that a component moves towards, relative "
+        "to the component’s resting state. They ensure that elevation changes are consistent "
+        "across actions and component types. For example, all components that lift on press have "
+        "the same elevation change relative to their resting elevation.\n"
+        "Once the input event is completed or cancelled, the component will return to its resting "
+        "elevation.\n\n"
+
+        "Avoiding elevation interference.\n\n"
+
+        "Components with responsive elevations may encounter other components as they move between "
+        "their resting elevations and dynamic elevation offsets. Because material cannot pass "
+        "through other material, components avoid interfering with one another any number of ways, "
+        "whether on a per component basis or using the entire app layout.\n"
+        "On a component level, components can move or be removed before they cause interference. "
+        "For example, a floating action button (FAB) can disappear or move off screen before a "
+        "user picks up a card, or it can move if a snackbar appears.\n"
+        "On the layout level, design your app layout to minimize opportunities for interference. "
+        "For example, position the FAB to one side of stream of a cards so the FAB won’t interfere "
+        "when a user tries to pick up one of cards.\n\n"
+    </string>
+    <string name="action_settings">Settings</string>
+
+
+</resources>

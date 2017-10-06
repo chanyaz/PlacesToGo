@@ -1,0 +1,31 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/menu_favorite"
+            android:icon="@drawable/ic_nav_drawer_star"
+            android:title="@string/menu_favorite"></item>
+        <item
+            android:id="@+id/menu_settings"
+            android:icon="@android:drawable/ic_menu_preferences"
+            android:title="@string/menu_settings"></item>
+    </group>
+
+    <item android:title="@string/menu_maps">
+        <menu>
+            <item
+                android:id="@+id/menu_maps"
+                android:icon="@android:drawable/ic_dialog_map"
+                android:title="@string/menu_maps" />
+        </menu>
+    </item>
+
+    <item android:title="@string/menu_item_communication">
+        <menu>
+            <item
+                android:id="@+id/menu_share"
+                android:icon="@drawable/ic_nav_drawer_share"
+                android:title="@string/menu_share" />
+        </menu>
+    </item>
+</menu>
