@@ -5,10 +5,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
@@ -19,7 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.example.dangkhoa.placestogo.RecyclerViewDecoration.ItemSpacing;
+import com.example.dangkhoa.placestogo.RecyclerViewDecoration.PlaceListItemSpacing;
 import com.example.dangkhoa.placestogo.adapter.PlaceListAdapter;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.example.dangkhoa.placestogo.service.PlaceService;
@@ -30,7 +32,7 @@ import java.util.ArrayList;
  * Created by dangkhoa on 29/09/2017.
  */
 
-public class PlaceListFragment extends Fragment {
+public class PlaceListFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public PlaceListFragment() {
 
@@ -41,6 +43,10 @@ public class PlaceListFragment extends Fragment {
 
     private static final String PLACE_LIST_SAVE_KEY = "place_list_save_key";
     private static final String RECYCLER_VIEW_STATE_SAVE_KEY = "recyler_view_state_save_key";
+    private static final String NEXT_PAGE_TOKEN_SAVE_KEY = "next_page_token_save_key";
+
+    private float RADIUS;
+    private String UNIT;
 
     private ArrayList<PlaceDetail> mPlaceList;
 
@@ -71,6 +77,20 @@ public class PlaceListFragment extends Fragment {
 
     private ViewHolder viewHolder;
 
+    public interface PlacesCallback {
+        void radiusAchieved(float radius);
+        void placesListAchieved(ArrayList<PlaceDetail> list);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        RADIUS = Float.parseFloat(sharedPreferences.getString(getString(R.string.pref_radius_key), getString(R.string.pref_radius_3_0_value)));
+        UNIT = sharedPreferences.getString(getString(R.string.pref_unit_key), getString(R.string.pref_unit_kilometers_value));
+
+        resetOffsetAndNextPageToken();
+        refresh();
+    }
+
     private class ViewHolder {
 
         public SwipeRefreshLayout mSwipeRefreshLayout;
@@ -87,6 +107,7 @@ public class PlaceListFragment extends Fragment {
         if (isServiceFinished) {
             outState.putParcelableArrayList(PLACE_LIST_SAVE_KEY, mPlaceList);
             outState.putParcelable(RECYCLER_VIEW_STATE_SAVE_KEY, viewHolder.mRecyclerView.getLayoutManager().onSaveInstanceState());
+            outState.putString(NEXT_PAGE_TOKEN_SAVE_KEY, mNextPageToken);
         }
 
         // these information is retrieved from main activity
@@ -110,6 +131,7 @@ public class PlaceListFragment extends Fragment {
         if (savedInstanceState != null) {
             mLastLocation = savedInstanceState.getParcelable(LOCATION_BUNDLE_KEY);
             mPlaceType = savedInstanceState.getString(PLACE_TYPE_BUNDLE_KEY);
+            mNextPageToken = savedInstanceState.getString(NEXT_PAGE_TOKEN_SAVE_KEY);
         } else {
             Bundle arguments = getArguments();
             if (arguments != null) {
@@ -119,6 +141,15 @@ public class PlaceListFragment extends Fragment {
         }
         mPlaceList = new ArrayList<>();
         placeListAdapter = new PlaceListAdapter(getContext(), mPlaceList);
+    }
+
+    private void setupSharedPreferences() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+        RADIUS = Float.parseFloat(sharedPreferences.getString(getString(R.string.pref_radius_key), getString(R.string.pref_radius_3_0_value)));
+        UNIT = sharedPreferences.getString(getString(R.string.pref_unit_key), getString(R.string.pref_unit_kilometers_value));
+
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
     @Nullable
@@ -132,8 +163,10 @@ public class PlaceListFragment extends Fragment {
         gridLayoutManager = new GridLayoutManager(getContext(), 2, StaggeredGridLayoutManager.VERTICAL, false);
         viewHolder.mRecyclerView.setLayoutManager(gridLayoutManager);
 
-        ItemSpacing itemSpacing = new ItemSpacing(14);
+        PlaceListItemSpacing itemSpacing = new PlaceListItemSpacing(14);
         viewHolder.mRecyclerView.addItemDecoration(itemSpacing);
+
+        setupSharedPreferences();
 
         viewHolder.mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -237,7 +270,7 @@ public class PlaceListFragment extends Fragment {
             Intent intent = new Intent(getContext(), PlaceService.class);
             intent.putExtra(PlaceService.CURRENT_LOCATION_KEY, mLastLocation);
             intent.putExtra(PlaceService.PLACE_TYPE_KEY, mPlaceType);
-            intent.putExtra(PlaceService.RADIUS_KEY, "2000");
+            intent.putExtra(PlaceService.RADIUS_KEY, Util.radiusInMeter(getContext(), RADIUS, UNIT));
             intent.putExtra(PlaceService.NEXT_PAGE_TOKEN_KEY, mNextPageToken);
             getContext().startService(intent);
         }
@@ -279,12 +312,15 @@ public class PlaceListFragment extends Fragment {
         hasSavedState = false;
 
         viewHolder.mRecyclerView.scrollToPosition(mPositionToScrollTo);
+        ((PlacesCallback) getContext()).radiusAchieved(Float.parseFloat(Util.radiusInMeter(getContext(), RADIUS, UNIT)));
+        ((PlacesCallback) getContext()).placesListAchieved(mPlaceList);
     }
 
     @Override
     public void onDestroy() {
-        getContext().unregisterReceiver(receiver);
         super.onDestroy();
+        getContext().unregisterReceiver(receiver);
+        PreferenceManager.getDefaultSharedPreferences(getContext()).unregisterOnSharedPreferenceChangeListener(this);
     }
 
     public class PlaceServiceReceiver extends BroadcastReceiver {
@@ -301,6 +337,8 @@ public class PlaceListFragment extends Fragment {
             updateUI(results);
         }
     }
+    // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    // TESTING FUNCTIONS
 
     /*
         Mock list generation and refresh mock function are used for testing ---------------

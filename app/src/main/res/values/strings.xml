@@ -14,6 +14,45 @@
     <string name="menu_item_communication">Communicate</string>
     <string name="menu_share">Share</string>
 
+    <string name="current_location">Current location</string>
+
+    <!-- Settings preferences -->
+
+    <!-- Label for the Unit List Preference -->
+    <string name="pref_unit_label">Unit</string>
+    <!-- Key name for the Unit preference to be stored in SharedPreferences -->
+    <string name="pref_unit_key" translatable="false">unit</string>
+
+    <!-- Labels for Unit preference -->
+    <string name="pref_unit_miles_label">Miles</string>
+    <string name="pref_unit_kilometers_label">Kilometers</string>
+
+    <!-- Key values for Unit preference -->
+    <string name="pref_unit_miles_value" translatable="false">miles</string>
+    <string name="pref_unit_kilometers_value" translatable="false">kilometers</string>
+
+    <string name="pref_radius_label">Radius</string>
+    <string name="pref_radius_key" translatable="false">radius</string>
+
+    <string name="pref_radius_0.5_label">0.5</string>
+    <string name="pref_radius_1.0_label">1.0</string>
+    <string name="pref_radius_3.0_label">3.0</string>
+    <string name="pref_radius_5.0_label">5.0</string>
+    <string name="pref_radius_10_label">10</string>
+    <string name="pref_radius_15_label">15</string>
+    <string name="pref_radius_20_label">20</string>
+    <string name="pref_radius_30_label">30</string>
+
+    <string name="pref_radius_0.5_value" translatable="false">0.5</string>
+    <string name="pref_radius_1.0_value" translatable="false">1</string>
+    <string name="pref_radius_3.0_value" translatable="false">3</string>
+    <string name="pref_radius_5.0_value" translatable="false">5</string>
+    <string name="pref_radius_10_value" translatable="false">10</string>
+    <string name="pref_radius_15_value" translatable="false">15</string>
+    <string name="pref_radius_20_value" translatable="false">20</string>
+    <string name="pref_radius_30_value" translatable="false">30</string>
+
+
     <!-- Share content -->
     <string name="share_type">text/plain</string>
     <string name="share_via">Share via</string>
@@ -23,6 +62,7 @@
     <string name="search_hint_text">Search any places here...</string>
     <string name="your_location_search">Your location</string>
     <string name="finding_location_progress">Finding your location...</string>
+    <string name="no_places_to_be_displayed_in_map">No places to be displayed !!!</string>
 
     <!-- Permissions -->
     <string name="request_location_permission_message">Location permission is needed to get nearby places</string>
@@ -61,7 +101,7 @@
     <string name="phone_is_not_available_message">Phone is not available</string>
     <string name="website_is_not_available_message">Website is not available</string>
 
-    <string name="uber_requires_install">You don not have Uber. Would you like to install?</string>
+    <string name="uber_requires_install">You do not have Uber. Would you like to install?</string>
 
     <string name="yes">Yes</string>
     <string name="no">No</string>
@@ -170,6 +210,7 @@
     <string name="place_types">Place types</string>
     <string name="search">Search</string>
     <string name="location_unavailable">Your location is unavailable</string>
+    <string name="search_place_type_here">Search place type...</string>
 
     <string name="accounting_value">accounting</string>
     <string name="airport_value">airport</string>

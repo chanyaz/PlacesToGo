@@ -2,14 +2,18 @@ package com.example.dangkhoa.placestogo;
 
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,6 +32,7 @@ import com.example.dangkhoa.placestogo.adapter.PlaceListAdapter;
 import com.example.dangkhoa.placestogo.adapter.ReviewListAdapter;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.example.dangkhoa.placestogo.data.Review;
+import com.example.dangkhoa.placestogo.database.DBContract;
 import com.example.dangkhoa.placestogo.service.PlaceDetailService;
 import com.squareup.picasso.Picasso;
 
@@ -43,6 +48,8 @@ public class DetailFragment extends Fragment {
     public static final String FLAG_ARG_BUNDLE_KEY = "flag_arg_bundle_key";
 
     private static final String PLACE_SAVE_KEY = "place_save_key";
+
+    private boolean mIsInDatabase;
 
     public DetailFragment() {
 
@@ -70,6 +77,7 @@ public class DetailFragment extends Fragment {
         public RatingBar ratingBar;
         public RecyclerView reviewRecyclerView;
         public ProgressBar progressBar;
+        public FloatingActionButton likeButton;
 
         public ViewHolder(View view) {
             thumbnailImage = view.findViewById(R.id.placeThumbnailImage);
@@ -93,6 +101,8 @@ public class DetailFragment extends Fragment {
             progressBar = view.findViewById(R.id.progressBar);
 
             collapsingToolbarLayout = view.findViewById(R.id.detail_fragment_toolbar_layout);
+
+            likeButton = view.findViewById(R.id.detail_fragment_favorite_button);
         }
     }
 
@@ -139,6 +149,9 @@ public class DetailFragment extends Fragment {
         View view = inflater.inflate(R.layout.detail_fragment, container, false);
 
         viewHolder = new ViewHolder(view);
+
+        DatabaseQuery databaseQuery = new DatabaseQuery();
+        databaseQuery.execute();
 
         mLinearlayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
         viewHolder.reviewRecyclerView.setLayoutManager(mLinearlayoutManager);
@@ -222,7 +235,67 @@ public class DetailFragment extends Fragment {
             refresh();
         }
 
+        viewHolder.likeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!mIsInDatabase) {
+                    getContext().getContentResolver().insert(DBContract.PlacesEntry.CONTENT_URI, valuesToDB(mPlaceDetail));
+                    viewHolder.likeButton.setImageResource(R.drawable.ic_favorite_pressed);
+                    mIsInDatabase = true;
+                } else {
+                    getContext().getContentResolver().delete(DBContract.PlacesEntry.buildItemUri(mPlaceDetail.getId()), null, null);
+                    viewHolder.likeButton.setImageResource(R.drawable.ic_favorite);
+                    mIsInDatabase = false;
+                }
+
+            }
+        });
+
         return view;
+    }
+
+    /*
+        This AsyncTask class will query database in the background to check whether the current place is in database
+        If it is, set the image source of the like button to pressed state.
+     */
+    private class DatabaseQuery extends AsyncTask<Void, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+
+            Cursor cursor = null;
+
+            try {
+                cursor = getContext().getContentResolver().query(
+                        DBContract.PlacesEntry.buildItemUri(mPlaceDetail.getId()),
+                        null,
+                        null,
+                        null,
+                        null);
+
+            } catch (Exception e) {
+
+            } finally {
+                cursor.close();
+            }
+
+            if (cursor.getCount() == 1) {
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean isInDatabase) {
+            super.onPostExecute(isInDatabase);
+
+            if (isInDatabase) {
+                mIsInDatabase = true;
+                viewHolder.likeButton.setImageResource(R.drawable.ic_favorite_pressed);
+            } else {
+                mIsInDatabase = false;
+            }
+        }
     }
 
     public class PlaceDetailServiceReceiver extends BroadcastReceiver {
@@ -308,5 +381,24 @@ public class DetailFragment extends Fragment {
             intent.putExtra(PlaceDetailService.PLACE_ID_KEY, mPlaceDetail);
             getContext().startService(intent);
         }
+    }
+
+    private ContentValues valuesToDB(PlaceDetail placeDetail) {
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(DBContract.PlacesEntry.COLUMN_PLACE_ID, placeDetail.getId());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_NAME, placeDetail.getName());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_ADDRESS, placeDetail.getAddress());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_IMAGE_URL, placeDetail.getImage_url());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_LATITUDE, String.valueOf(placeDetail.getLatitude()));
+        contentValues.put(DBContract.PlacesEntry.COLUMN_LONGITUDE, String.valueOf(placeDetail.getLongitude()));
+        contentValues.put(DBContract.PlacesEntry.COLUMN_RATING, String.valueOf(placeDetail.getRating()));
+        contentValues.put(DBContract.PlacesEntry.COLUMN_LOCALITY, placeDetail.getLocality());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_COUNTRY, placeDetail.getCountry());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_POSTCODE, placeDetail.getPostCode());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_WEBSITE, placeDetail.getWebsite());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_PHONE, placeDetail.getInternationalPhone());
+
+        return contentValues;
     }
 }

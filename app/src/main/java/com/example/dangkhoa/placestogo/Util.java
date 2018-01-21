@@ -27,6 +27,12 @@ public class Util {
         return String.valueOf(latLng.latitude) + "," + String.valueOf(latLng.longitude);
     }
 
+    public static LatLng stringToLocation(String mStringLoc) {
+        String[] strings = mStringLoc.split(",");
+        LatLng location = new LatLng(Double.parseDouble(strings[0]), Double.parseDouble(strings[1]));
+        return location;
+    }
+
     public static String constructImageURL(Context context, String photo_ref) {
         String MAX_WIDTH = "300";
         String api = "&key=" + context.getString(R.string.android_api_key);
@@ -128,6 +134,17 @@ public class Util {
 
             AlertDialog alertDialog = builder.create();
             alertDialog.show();
+        }
+    }
+
+    public static String radiusInMeter(Context context, float radius, String unit) {
+        float kilometerConst = 1000f;
+        float mileConst = 1609.34f;
+
+        if (unit.equals(context.getString(R.string.pref_unit_miles_value))) {
+            return String.valueOf(radius * mileConst);
+        } else {
+            return String.valueOf(radius * kilometerConst);
         }
     }
 }

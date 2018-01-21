@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.example.dangkhoa.placestogo.MainActivity;
+import com.example.dangkhoa.placestogo.MainFragment;
 import com.example.dangkhoa.placestogo.R;
 
 import java.io.IOException;
@@ -70,7 +71,7 @@ public class AddressLookupService extends IntentService {
         }
 
         Intent broadcastIntent = new Intent();
-        broadcastIntent.setAction(MainActivity.AddressLookupServiceReceiver.ADDRESS_RECEIVER);
+        broadcastIntent.setAction(MainFragment.AddressLookupServiceReceiver.ADDRESS_RECEIVER);
         broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
         broadcastIntent.putExtra(LOCATION_KEY_RESPONSE, formatted_address);
         broadcastIntent.putExtra(ERROR_MESSAGE_KEY_RESPONSE, errMessage);

@@ -99,7 +99,6 @@ public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.View
         if (placeDetail.getImage_url() != null && !placeDetail.getImage_url().equals("")) {
             Picasso.with(mContext)
                     .load(placeDetail.getImage_url())
-                    .error(R.mipmap.ic_launcher)
                     .into(viewHolder.thumbnail);
         } else {
             Picasso.with(mContext)

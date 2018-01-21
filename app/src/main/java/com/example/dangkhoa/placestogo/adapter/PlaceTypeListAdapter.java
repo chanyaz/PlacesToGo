@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.example.dangkhoa.placestogo.DetailActivity;
 import com.example.dangkhoa.placestogo.MainActivity;
+import com.example.dangkhoa.placestogo.MainFragment;
 import com.example.dangkhoa.placestogo.PlaceListActivity;
 import com.example.dangkhoa.placestogo.R;
 import com.example.dangkhoa.placestogo.Util;
@@ -115,8 +116,8 @@ public class PlaceTypeListAdapter extends RecyclerView.Adapter<PlaceTypeListAdap
             int position = getAdapterPosition();
 
             Intent intent = new Intent(mContext, PlaceListActivity.class);
-            intent.putExtra(MainActivity.PLACE_TYPE_KEY, mFilteredList.get(position));
-            intent.putExtra(MainActivity.CURRENT_LOCATION_KEY, mLastLocation);
+            intent.putExtra(MainFragment.PLACE_TYPE_KEY, mFilteredList.get(position));
+            intent.putExtra(MainFragment.CURRENT_LOCATION_KEY, mLastLocation);
             mContext.startActivity(intent);
         }
     }

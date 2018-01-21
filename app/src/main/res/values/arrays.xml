@@ -1,4 +1,36 @@
 <resources>
+    
+    <array name="pref_unit_option_labels">
+        <item>@string/pref_unit_miles_label</item>
+        <item>@string/pref_unit_kilometers_label</item>
+    </array>
+
+    <array name="pref_unit_option_values">
+        <item>@string/pref_unit_miles_value</item>
+        <item>@string/pref_unit_kilometers_value</item>
+    </array>
+
+    <array name="pref_radius_option_labels">
+        <item>@string/pref_radius_0.5_label</item>
+        <item>@string/pref_radius_1.0_label</item>
+        <item>@string/pref_radius_3.0_label</item>
+        <item>@string/pref_radius_5.0_label</item>
+        <item>@string/pref_radius_10_label</item>
+        <item>@string/pref_radius_15_label</item>
+        <item>@string/pref_radius_20_label</item>
+        <item>@string/pref_radius_30_label</item>
+    </array>
+
+    <array name="pref_radius_option_values">
+        <item>@string/pref_radius_0.5_value</item>
+        <item>@string/pref_radius_1.0_value</item>
+        <item>@string/pref_radius_3.0_value</item>
+        <item>@string/pref_radius_5.0_value</item>
+        <item>@string/pref_radius_10_value</item>
+        <item>@string/pref_radius_15_value</item>
+        <item>@string/pref_radius_20_value</item>
+        <item>@string/pref_radius_30_value</item>
+    </array>
 
     <string-array name="place_type_array">
         <item>@string/accounting_value</item>

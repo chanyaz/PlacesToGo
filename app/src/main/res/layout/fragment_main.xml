@@ -1,0 +1,254 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/grey_200"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingBottom="12dp"
+            android:paddingLeft="16dp"
+            android:paddingTop="4dp">
+
+            <TextView
+                android:id="@+id/user_location_text"
+                style="@style/TextAppearance.AppCompat.Body1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
+                android:background="@drawable/round_corner_background"
+                android:backgroundTint="@color/grey_300"
+                android:contentDescription=""
+                android:fontFamily="serif"
+                android:gravity="center"
+                android:maxLines="2"
+                android:paddingBottom="6dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:paddingTop="6dp"
+                android:text="@string/your_location_search" />
+
+            <ImageButton
+                android:id="@+id/location_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginRight="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/round_corner_background"
+                android:backgroundTint="@color/colorPrimary"
+                android:contentDescription=""
+                android:src="@drawable/ic_location_detector_selector" />
+
+
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/select_a_place_type"
+                            android:textColor="@color/colorPrimary" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginLeft="12dp"
+                            android:background="@color/grey_600" />
+
+                    </LinearLayout>
+
+                    <!-- First row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginTop="24dp"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:id="@+id/restaurant_item_layout"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/main_place_type_touch_selector"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="4dp">
+
+                            <ImageView
+                                android:id="@+id/imageView2"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_restaurant_selector" />
+
+                            <TextView
+                                android:id="@+id/restaurant_item_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/cafe_item_layout"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/main_place_type_touch_selector"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="4dp">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_cafe_selector" />
+
+                            <TextView
+                                android:id="@+id/cafe_item_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/takeaway_item_layout"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/main_place_type_touch_selector"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="4dp">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_takeaway_selector" />
+
+                            <TextView
+                                android:id="@+id/takeaway_item_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout> <!-- End first row -->
+
+                    <!-- Second row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:id="@+id/store_item_layout"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/main_place_type_touch_selector"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="4dp">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_convenience_store_selector" />
+
+                            <TextView
+                                android:id="@+id/store_item_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/bus_station_item_layout"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/main_place_type_touch_selector"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="4dp">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_bus_station_selector" />
+
+                            <TextView
+                                android:id="@+id/bus_station_item_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/more_item_layout"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/main_place_type_touch_selector"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="4dp">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_more_selector" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/more" />
+
+                        </LinearLayout>
+                    </LinearLayout> <!-- End second row -->
+                </LinearLayout> <!-- End select type layout -->
+
+            </LinearLayout> <!-- End parent layout inside scrollview -->
+
+        </ScrollView>
+
+    </LinearLayout>
+
+</RelativeLayout>

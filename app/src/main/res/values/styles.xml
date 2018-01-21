@@ -6,6 +6,9 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- Add Preference Theme, otherwise the app will crash when tryinng to launch preference screen -->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
     <style name="ActionBarTheme" parent="Theme.AppCompat.Light.DarkActionBar">

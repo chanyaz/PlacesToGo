@@ -25,6 +25,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:testOnly="true"
         android:theme="@style/AppTheme">
         <meta-data
             android:name="com.google.android.gms.version"
@@ -49,7 +50,15 @@
         <activity
             android:name=".DetailActivity"
             android:label="@string/title_activity_detail"
-            android:theme="@style/AppTheme"></activity>
+            android:theme="@style/AppTheme" />
+
+        <provider
+            android:name=".database.PlacesContentProvider"
+            android:authorities="com.example.dangkhoa.placestogo"
+            android:exported="false" /> <!-- don't allow other apps to access this content provider -->
+        <activity android:name=".FavoriteActivity" />
+
+        <activity android:name=".SettingsActivity"></activity>
     </application>
 
 </manifest>
