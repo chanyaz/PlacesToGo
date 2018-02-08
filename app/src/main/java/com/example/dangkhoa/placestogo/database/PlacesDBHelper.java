@@ -24,8 +24,7 @@ public class PlacesDBHelper extends SQLiteOpenHelper {
         final String SQL_CREATE_RESTAURANT_TABLE = "create table "
                 + DBContract.PlacesEntry.TABLE_NAME
                 + " ( "
-                + DBContract.PlacesEntry._ID + " integer primary key autoincrement, "
-                + DBContract.PlacesEntry.COLUMN_PLACE_ID + " text, "
+                + DBContract.PlacesEntry.COLUMN_PLACE_ID + " text not null, "
                 + DBContract.PlacesEntry.COLUMN_NAME + " text, "
                 + DBContract.PlacesEntry.COLUMN_ADDRESS + " text, "
                 + DBContract.PlacesEntry.COLUMN_IMAGE_URL + " text, "
@@ -37,17 +36,8 @@ public class PlacesDBHelper extends SQLiteOpenHelper {
                 + DBContract.PlacesEntry.COLUMN_POSTCODE + " text, "
                 + DBContract.PlacesEntry.COLUMN_WEBSITE + " text, "
                 + DBContract.PlacesEntry.COLUMN_PHONE + " text, "
-
-                + "unique ( " + DBContract.PlacesEntry.COLUMN_PLACE_ID + " ) on conflict replace );";
-
-        /*final String SQL_CREATE_REVIEW_TABLE = "create table "
-                + Reviews.TABLE_NAME
-                + " ( "
-                + Reviews._ID + " integer primary key autoincrement, "
-                + Reviews.USER_NAME + " text, "
-                + Reviews.REVIEW_TEXT + " text, "
-                + Reviews.REVIEW_TIME + " text, "
-                + */
+                + "constraint " + DBContract.PlacesEntry.COLUMN_PLACE_ID + " primary key (" + DBContract.PlacesEntry.COLUMN_PLACE_ID + ")"
+                + "on conflict replace );";
 
         sqLiteDatabase.execSQL(SQL_CREATE_RESTAURANT_TABLE);
 

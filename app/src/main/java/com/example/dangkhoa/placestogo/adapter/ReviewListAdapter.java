@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.dangkhoa.placestogo.R;
+import com.example.dangkhoa.placestogo.Util;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.example.dangkhoa.placestogo.data.Review;
 import com.squareup.picasso.Callback;
@@ -54,30 +55,37 @@ public class ReviewListAdapter extends RecyclerView.Adapter<ReviewListAdapter.Vi
 
         viewHolder.userName.setText(review.getUser_name());
         viewHolder.reviewText.setText(review.getReview_text());
-        viewHolder.reviewTime.setText(review.getReview_time_friendly());
+
+        // if the time received cannot be converted to a date --> this time is from google
+        if (!Util.isValidDate(review.getReview_time_friendly())) {
+            viewHolder.reviewTime.setText(review.getReview_time_friendly());
+
+        } else {
+            viewHolder.reviewTime.setText(Util.timeFriendly(mContext, review.getReview_time_friendly()));
+        }
+
         viewHolder.rating.setRating(Float.parseFloat(review.getUser_rating()));
 
         String profile_image_url = review.getProfile_image_url();
-        if (profile_image_url!=null) {
-            if (!profile_image_url.equals("")) {
-                Picasso.with(mContext)
-                        .load(profile_image_url)
-                        .into(viewHolder.user_image, new Callback() {
-                            @Override
-                            public void onSuccess() {
-                                Bitmap bitmap = ((BitmapDrawable) viewHolder.user_image.getDrawable()).getBitmap();
-                                RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(mContext.getResources(), bitmap);
-                                roundedBitmapDrawable.setCircular(true);
-                                roundedBitmapDrawable.setCornerRadius(Math.max(bitmap.getWidth(), bitmap.getHeight()) / 2.0f);
-                                viewHolder.user_image.setImageDrawable(roundedBitmapDrawable);
-                            }
 
-                            @Override
-                            public void onError() {
-                                viewHolder.user_image.setImageResource(R.mipmap.ic_launcher);
-                            }
-                        });
-            }
+        if (profile_image_url != null && !profile_image_url.equals("")) {
+            Picasso.with(mContext)
+                    .load(profile_image_url)
+                    .into(viewHolder.user_image, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            Bitmap bitmap = ((BitmapDrawable) viewHolder.user_image.getDrawable()).getBitmap();
+                            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(mContext.getResources(), bitmap);
+                            roundedBitmapDrawable.setCircular(true);
+                            roundedBitmapDrawable.setCornerRadius(Math.max(bitmap.getWidth(), bitmap.getHeight()) / 2.0f);
+                            viewHolder.user_image.setImageDrawable(roundedBitmapDrawable);
+                        }
+
+                        @Override
+                        public void onError() {
+                            viewHolder.user_image.setImageResource(R.mipmap.ic_launcher);
+                        }
+                    });
         } else {
             Picasso.with(mContext)
                     .load(R.mipmap.ic_launcher)

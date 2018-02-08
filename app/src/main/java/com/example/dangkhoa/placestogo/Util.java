@@ -1,5 +1,6 @@
 package com.example.dangkhoa.placestogo;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,7 +10,15 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 
+import com.example.dangkhoa.placestogo.data.PlaceDetail;
+import com.example.dangkhoa.placestogo.database.DBContract;
+import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.maps.model.LatLng;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Created by dangkhoa on 28/09/2017.
@@ -75,7 +84,7 @@ public class Util {
 
     public static void createMapIntent(Context context, Double lat, Double lon, String label) {
         Intent intent = new Intent(Intent.ACTION_VIEW,
-                Uri.parse("geo:<" + lat  + ">,<" + lon + ">?q=<" + lat  + ">,<" + lon + ">(" + label + ")"));
+                Uri.parse("geo:<" + lat + ">,<" + lon + ">?q=<" + lat + ">,<" + lon + ">(" + label + ")"));
         context.startActivity(intent);
     }
 
@@ -137,6 +146,26 @@ public class Util {
         }
     }
 
+    // this function is used to convert a place detail object into content values
+    public static ContentValues valuesToDB(PlaceDetail placeDetail) {
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(DBContract.PlacesEntry.COLUMN_PLACE_ID, placeDetail.getId());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_NAME, placeDetail.getName());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_ADDRESS, placeDetail.getAddress());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_IMAGE_URL, placeDetail.getImage_url());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_LATITUDE, String.valueOf(placeDetail.getLatitude()));
+        contentValues.put(DBContract.PlacesEntry.COLUMN_LONGITUDE, String.valueOf(placeDetail.getLongitude()));
+        contentValues.put(DBContract.PlacesEntry.COLUMN_RATING, String.valueOf(placeDetail.getRating()));
+        contentValues.put(DBContract.PlacesEntry.COLUMN_LOCALITY, placeDetail.getLocality());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_COUNTRY, placeDetail.getCountry());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_POSTCODE, placeDetail.getPostCode());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_WEBSITE, placeDetail.getWebsite());
+        contentValues.put(DBContract.PlacesEntry.COLUMN_PHONE, placeDetail.getInternationalPhone());
+
+        return contentValues;
+    }
+
     public static String radiusInMeter(Context context, float radius, String unit) {
         float kilometerConst = 1000f;
         float mileConst = 1609.34f;
@@ -146,5 +175,104 @@ public class Util {
         } else {
             return String.valueOf(radius * kilometerConst);
         }
+    }
+
+    private static final String DATE_FORMAT = "EEE MMM dd hh:mm:ss yyyy";
+
+    public static String getCurrentTime() {
+        Date currentTime = Calendar.getInstance().getTime();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT);
+
+        return simpleDateFormat.format(currentTime);
+    }
+
+    public static boolean isValidDate(String inDate) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        dateFormat.setLenient(false);
+        try {
+            dateFormat.parse(inDate.trim());
+        } catch (ParseException pe) {
+            return false;
+        }
+        return true;
+    }
+
+    public static String timeFriendly(Context context, String receivedTime) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+
+        String currentTime = Util.getCurrentTime();
+
+        String timeDiff = "";
+
+        try {
+            Date currentDate = dateFormat.parse(currentTime);
+            Date receivedDate = dateFormat.parse(receivedTime);
+
+            long diff = currentDate.getTime() - receivedDate.getTime();
+
+            //long diffSeconds = diff / 1000 % 60;
+            long diffMinutes = diff / (60 * 1000) % 60;
+            long diffHours = diff / (60 * 60 * 1000) % 24;
+            long diffDays = diff / (24 * 60 * 60 * 1000);
+
+            if (diffMinutes == 0 && diffHours == 0 && diffDays == 0) {
+                timeDiff = context.getString(R.string.seconds_ago);
+
+            } else if (diffHours == 0 && diffDays == 0) {
+
+                if (diffMinutes == 1) {
+                    timeDiff = diffMinutes + " " + context.getString(R.string.minute_ago);
+                } else {
+                    timeDiff = diffMinutes + " " + context.getString(R.string.minutes_ago);
+                }
+
+            } else if (diffDays == 0) {
+
+                if (diffHours == 1) {
+                    timeDiff = diffHours + " " + context.getString(R.string.hour_ago);
+                } else {
+                    timeDiff = diffHours + " " + context.getString(R.string.hours_ago);
+                }
+
+            } else if (diffDays > 0 && diffDays <= 7) {
+
+                if (diffDays == 1) {
+                    timeDiff = diffDays + " " + context.getString(R.string.day_ago);
+                } else {
+                    timeDiff = diffDays + " " + context.getString(R.string.days_ago);
+                }
+
+            } else if (diffDays > 7 && diffDays <= 30) {
+
+                int weeks = (int) diffDays / 7;
+
+                if (weeks == 1) {
+                    timeDiff = weeks + " " + context.getString(R.string.week_ago);
+                } else {
+                    timeDiff = weeks + " " + context.getString(R.string.weeks_ago);
+                }
+
+            } else if (diffDays > 30 && diffDays <= 365) {
+
+                int months = (int) diffDays / 30;
+
+                if (months == 1) {
+                    timeDiff = months + " " + context.getString(R.string.month_ago);
+                } else {
+                    timeDiff = months + " " + context.getString(R.string.months_ago);
+                }
+            }
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return timeDiff;
+    }
+
+    public static void signOut(Context context) {
+        // delete all entries within table Places in sql database
+        context.getContentResolver().delete(DBContract.PlacesEntry.CONTENT_URI, null, null);
+        AuthUI.getInstance().signOut(context);
     }
 }

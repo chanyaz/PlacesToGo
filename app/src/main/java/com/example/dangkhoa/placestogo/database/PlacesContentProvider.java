@@ -114,7 +114,9 @@ public class PlacesContentProvider extends ContentProvider {
                     // pass in a content_uri with an inserted row id
                     returnUri = ContentUris.withAppendedId(DBContract.PlacesEntry.CONTENT_URI, id);
                 } else {
-                    throw new android.database.SQLException("Insert failed into " + uri);
+                    // do nothing here
+                    //throw new android.database.SQLException("Insert failed into " + uri);
+                    return null;
                 }
 
                 break;
@@ -148,6 +150,13 @@ public class PlacesContentProvider extends ContentProvider {
                 placeDeleted = db.delete(DBContract.PlacesEntry.TABLE_NAME,
                         mSelection,
                         mSelectionArgs);
+
+                break;
+
+            case PLACES:
+                placeDeleted = db.delete(DBContract.PlacesEntry.TABLE_NAME,
+                        null,
+                        null);
 
                 break;
 

@@ -183,6 +183,14 @@ public class PlaceListActivity extends AppCompatActivity implements NavigationVi
                 String message = this.getResources().getString(R.string.app_share);
                 Util.shareIntent(this, message);
                 break;
+            case R.id.menu_account:
+                break;
+            case R.id.menu_signout:
+                Util.signOut(this);
+                Intent mainIntent = new Intent(this, MainActivity.class);
+                startActivity(mainIntent);
+                finish();
+                break;
         }
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;

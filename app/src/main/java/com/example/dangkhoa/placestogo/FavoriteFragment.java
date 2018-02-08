@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +21,14 @@ import android.view.ViewGroup;
 
 import com.example.dangkhoa.placestogo.RecyclerViewDecoration.FavoritePlaceItemSpacing;
 import com.example.dangkhoa.placestogo.adapter.FavoritePlacesAdapter;
+import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.example.dangkhoa.placestogo.database.DBContract;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 /**
  * Created by dangkhoa on 23/10/2017.
@@ -39,6 +45,10 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
 
     private Paint paint;
 
+    private FirebaseAuth mFirebaseAuth;
+    private DatabaseReference mFavoritePlacesReference;
+    private ChildEventListener mChildEventListener;
+
     private class ViewHolder {
         public RecyclerView recyclerView;
 
@@ -52,6 +62,12 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
         super.onCreate(savedInstanceState);
 
         paint = new Paint();
+
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        // reference to user's favorite places in Firebase
+        mFavoritePlacesReference = FirebaseDatabase.getInstance().getReference().child(DetailFragment.FAVORITE_PLACES_CHILD);
+
+        attachFavoritePlacesListener();
     }
 
     @Nullable
@@ -82,10 +98,16 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 String id = (String) viewHolder.itemView.getTag();
+                // delete from sql local database
                 getContext().getContentResolver().delete(DBContract.PlacesEntry.buildItemUri(id), null, null);
 
                 // restart loader when item is deleted
                 getLoaderManager().restartLoader(LOAD_ID, null, FavoriteFragment.this);
+
+                // notify Firebase about deletion
+                // do not do this in listener because if user deletes the place when there is no internet connection, the sql database won't be notified
+                // and the loader cannot work properly
+                mFavoritePlacesReference.child(mFirebaseAuth.getCurrentUser().getUid()).child(id).removeValue();
             }
 
             @Override
@@ -122,6 +144,54 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
         }).attachToRecyclerView(viewHolder.recyclerView);
 
         return view;
+    }
+
+    private void attachFavoritePlacesListener() {
+        if (mChildEventListener == null) {
+            mChildEventListener = new ChildEventListener() {
+                // this function should get called the first time the user logs in to load their favorite places from Firebase and store in sql database
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                    PlaceDetail placeDetail = dataSnapshot.getValue(PlaceDetail.class);
+                    // insert into sql local database
+                    getActivity().getContentResolver().insert(DBContract.PlacesEntry.CONTENT_URI, Util.valuesToDB(placeDetail));
+                }
+
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            };
+            mFavoritePlacesReference.child(mFirebaseAuth.getCurrentUser().getUid()).addChildEventListener(mChildEventListener);
+        }
+    }
+
+    private void detachFavoritePlacesListener() {
+        if (mChildEventListener != null) {
+            mFavoritePlacesReference.child(mFirebaseAuth.getCurrentUser().getUid()).removeEventListener(mChildEventListener);
+            mChildEventListener = null;
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        detachFavoritePlacesListener();
     }
 
     @Override

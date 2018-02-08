@@ -20,13 +20,27 @@ import android.view.View;
 import android.widget.ListView;
 
 import com.example.dangkhoa.placestogo.adapter.GooglePlacesAutoCompleteAdapter;
+import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DatabaseReference;
+
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, MainFragment.MorePlacesCallback {
 
     private static final String LOG_TAG = "MAIN";
+    private static final int RC_SIGN_IN = 100;
 
     private static final String MAIN_FRAGMENT_TAG = "main_fragment";
     private static final String PLACE_TYPE_FRAGMENT_TAG = "place_type_fragment_tag";
+
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseAuth.AuthStateListener mAuthStateListener;
+
+    private DatabaseReference mFavoritePlacesReference;
+    private ChildEventListener mChildEventListener;
 
     private class ViewHolder {
 
@@ -62,6 +76,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        mFirebaseAuth = FirebaseAuth.getInstance();
+
         viewHolder = new ViewHolder();
 
         setSupportActionBar(viewHolder.toolbar);
@@ -75,11 +91,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         viewHolder.navigationView.setNavigationItemSelectedListener(this);
 
-        MainFragment mainFragment = new MainFragment();
+        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
 
-        getFragmentManager().beginTransaction()
-                .replace(R.id.main_activity_container, mainFragment, MAIN_FRAGMENT_TAG)
-                .commit();
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+
+                if (user != null) {
+
+                    MainFragment mainFragment = (MainFragment) getFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);
+
+                    if (mainFragment == null) {
+                        getFragmentManager().beginTransaction()
+                                .replace(R.id.main_activity_container, new MainFragment(), MAIN_FRAGMENT_TAG)
+                                .commit();
+                    }
+
+                } else {
+                    startActivityForResult(
+                            AuthUI.getInstance()
+                                    .createSignInIntentBuilder()
+                                    .setAvailableProviders(Arrays.asList(
+                                            new AuthUI.IdpConfig.EmailBuilder().build(),
+                                            new AuthUI.IdpConfig.GoogleBuilder().build()))
+                                    .build(),
+                            RC_SIGN_IN);
+                }
+
+            }
+        };
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_SIGN_IN) {
+            if (resultCode == RESULT_OK) {
+                // signed in successfully
+            } else if (resultCode == RESULT_CANCELED) {
+                finish();
+            }
+        }
     }
 
     @Override
@@ -130,9 +182,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 String message = this.getResources().getString(R.string.app_share);
                 Util.shareIntent(this, message);
                 break;
+            case R.id.menu_account:
+                break;
+            case R.id.menu_signout:
+                Util.signOut(this);
+                break;
         }
         viewHolder.drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (mAuthStateListener != null) {
+            mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
+        }
     }
 
     @Override
@@ -150,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         args.putParcelable(MainFragment.CURRENT_LOCATION_KEY, location);
 
         placeTypeFragment.setArguments(args);
-        
+
         ft.add(R.id.main_activity_container, placeTypeFragment, PLACE_TYPE_FRAGMENT_TAG).commit();
     }
 

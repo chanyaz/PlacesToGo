@@ -1,6 +1,5 @@
 package com.example.dangkhoa.placestogo.database;
 
-import android.content.ContentResolver;
 import android.net.Uri;
 import android.provider.BaseColumns;
 

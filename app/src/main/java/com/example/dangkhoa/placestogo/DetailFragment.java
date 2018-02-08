@@ -2,7 +2,6 @@ package com.example.dangkhoa.placestogo;
 
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -20,6 +19,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -34,6 +35,13 @@ import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.example.dangkhoa.placestogo.data.Review;
 import com.example.dangkhoa.placestogo.database.DBContract;
 import com.example.dangkhoa.placestogo.service.PlaceDetailService;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -49,7 +57,18 @@ public class DetailFragment extends Fragment {
 
     private static final String PLACE_SAVE_KEY = "place_save_key";
 
+    private static final int REVIEW_MIN_TEXT_LENGTH = 8;
+
     private boolean mIsInDatabase;
+
+    public static final String FAVORITE_PLACES_CHILD = "FavoritePlaces";
+    public static final String REVIEWS_CHILD = "Reviews";
+
+    private FirebaseDatabase mFirebaseDatabase;
+    private DatabaseReference mReviewsReference, mFavoritePlacesReference;
+    private ChildEventListener mChildEventReviewsListener;
+
+    private FirebaseAuth mFireBaseAuth;
 
     public DetailFragment() {
 
@@ -77,7 +96,7 @@ public class DetailFragment extends Fragment {
         public RatingBar ratingBar;
         public RecyclerView reviewRecyclerView;
         public ProgressBar progressBar;
-        public FloatingActionButton likeButton;
+        public FloatingActionButton likeButton, reviewButton;
 
         public ViewHolder(View view) {
             thumbnailImage = view.findViewById(R.id.placeThumbnailImage);
@@ -103,6 +122,7 @@ public class DetailFragment extends Fragment {
             collapsingToolbarLayout = view.findViewById(R.id.detail_fragment_toolbar_layout);
 
             likeButton = view.findViewById(R.id.detail_fragment_favorite_button);
+            reviewButton = view.findViewById(R.id.detail_fragment_write_review_button);
         }
     }
 
@@ -127,6 +147,9 @@ public class DetailFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mFireBaseAuth = FirebaseAuth.getInstance();
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+
         IntentFilter intentFilter = new IntentFilter(PlaceDetailServiceReceiver.PLACE_DETAIL_RECEIVER);
         intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
         receiver = new PlaceDetailServiceReceiver();
@@ -140,7 +163,12 @@ public class DetailFragment extends Fragment {
             mFlagActivity = bundle.getInt(FLAG_ARG_BUNDLE_KEY);
         }
         mReviewList = new ArrayList<>();
+
         mAdapter = new ReviewListAdapter(getActivity(), mReviewList);
+
+        mReviewsReference = mFirebaseDatabase.getReference().child(REVIEWS_CHILD);
+        mFavoritePlacesReference = mFirebaseDatabase.getReference().child(FAVORITE_PLACES_CHILD);
+
     }
 
     @Nullable
@@ -155,6 +183,30 @@ public class DetailFragment extends Fragment {
 
         mLinearlayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
         viewHolder.reviewRecyclerView.setLayoutManager(mLinearlayoutManager);
+        viewHolder.reviewRecyclerView.setAdapter(mAdapter);
+
+        if (savedInstanceState != null && savedInstanceState.containsKey(PLACE_SAVE_KEY)) {
+            ArrayList<Review> list = mPlaceDetail.getReviews();
+
+            isServiceFinished = true;
+
+            updateUI();
+            populateReviewList(list);
+
+        } else {
+            // if this fragment is called from list activity or by clicking on search view
+            // we don't need to do extra things except calling refresh
+            if (mFlagActivity == GooglePlacesAutoCompleteAdapter.FLAG_SEARCH_LIST_ADAPTER || mFlagActivity == PlaceListAdapter.FLAG_PLACE_LIST_ADAPTER) {
+                // disable the Like button
+                viewHolder.likeButton.setEnabled(false);
+
+                // if this fragment is called from favorite activity
+                // then we update UI first before calling refresh to get update with new reviews
+            } else {
+                updateUI();
+            }
+            refresh();
+        }
 
         viewHolder.phoneButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -213,45 +265,162 @@ public class DetailFragment extends Fragment {
             }
         });
 
-        if (savedInstanceState != null && savedInstanceState.containsKey(PLACE_SAVE_KEY)) {
-            ArrayList<Review> list = mPlaceDetail.getReviews();
-
-            isServiceFinished = true;
-
-            updateUI();
-            populateReviewList(list);
-
-        } else {
-            // if this fragment is called from list activity or by clicking on search view
-            // we don't need to do extra things except calling refresh
-            if (mFlagActivity == GooglePlacesAutoCompleteAdapter.FLAG_SEARCH_LIST_ADAPTER || mFlagActivity == PlaceListAdapter.FLAG_PLACE_LIST_ADAPTER) {
-                // do nothing here
-
-                // if this fragment is called from favorite activity
-                // then we update UI first before calling refresh to get update with new reviews
-            } else {
-                updateUI();
-            }
-            refresh();
-        }
-
         viewHolder.likeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (!mIsInDatabase) {
-                    getContext().getContentResolver().insert(DBContract.PlacesEntry.CONTENT_URI, valuesToDB(mPlaceDetail));
+                    // insert into sql database
+                    // do not implement listener here because
+                    // if user hits like when there is no internet connection, Firebase cannot notify the app to insert the place into sql database
+                    getContext().getContentResolver().insert(DBContract.PlacesEntry.CONTENT_URI, Util.valuesToDB(mPlaceDetail));
                     viewHolder.likeButton.setImageResource(R.drawable.ic_favorite_pressed);
                     mIsInDatabase = true;
+
+                    // add to Firebase
+                    PlaceDetail placeDetail = mPlaceDetail;
+                    placeDetail.setReviews(null);
+                    mFavoritePlacesReference.child(mFireBaseAuth.getCurrentUser().getUid()).child(mPlaceDetail.getId()).setValue(placeDetail);
                 } else {
+                    // delete from sql database
                     getContext().getContentResolver().delete(DBContract.PlacesEntry.buildItemUri(mPlaceDetail.getId()), null, null);
                     viewHolder.likeButton.setImageResource(R.drawable.ic_favorite);
                     mIsInDatabase = false;
+
+                    // remove from Firebase
+                    mFavoritePlacesReference.child(mFireBaseAuth.getCurrentUser().getUid()).child(mPlaceDetail.getId()).removeValue();
                 }
 
             }
         });
 
+        viewHolder.reviewButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+                View reviewDialogView = LayoutInflater.from(getContext()).inflate(R.layout.review_dialog, null);
+
+                builder.setView(reviewDialogView);
+
+                final AlertDialog reviewDialog = builder.create();
+                reviewDialog.show();
+
+                final RatingBar reviewRatingBar = reviewDialog.findViewById(R.id.reviewRatingBar);
+                final EditText reviewEditText = reviewDialog.findViewById(R.id.reviewEditText);
+                Button reviewCancelBtn = reviewDialog.findViewById(R.id.reviewCancelButton);
+                Button reviewSubmitBtn = reviewDialog.findViewById(R.id.reviewSubmitButton);
+
+                reviewCancelBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        reviewDialog.dismiss();
+                    }
+                });
+
+                reviewSubmitBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        float rating = reviewRatingBar.getRating();
+                        String reviewText = reviewEditText.getText().toString();
+
+                        if (reviewText.length() > REVIEW_MIN_TEXT_LENGTH) {
+                            viewHolder.progressBar.setVisibility(View.VISIBLE);
+
+                            FirebaseUser user = mFireBaseAuth.getCurrentUser();
+
+                            String user_photo = "";
+
+                            if (user.getPhotoUrl() != null) {
+                                if (user.getPhotoUrl().toString() != null && !user.getPhotoUrl().toString().equals("")) {
+                                    user_photo = user.getPhotoUrl().toString();
+                                }
+                            }
+
+                            Review review = new Review(user.getDisplayName(),
+                                    reviewText,
+                                    String.valueOf(rating),
+                                    Util.getCurrentTime(),
+                                    user_photo);
+                            mReviewsReference.child(mPlaceDetail.getId()).child(mFireBaseAuth.getCurrentUser().getUid()).setValue(review);
+
+                            reviewDialog.dismiss();
+
+                        } else {
+                            Toast.makeText(getContext(), getString(R.string.review_text_too_short), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        });
+
+        attachReviewsListener();
+
         return view;
+    }
+
+    private void attachReviewsListener() {
+        if (mChildEventReviewsListener == null) {
+            mChildEventReviewsListener = new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                    Review review = dataSnapshot.getValue(Review.class);
+
+                    // a user cannot have multiple reviews
+                    // they can only update their previous review
+                    // so, submit review will perform update if that is not the first time reviewing
+                    if (dataSnapshot.getKey().equals(mFireBaseAuth.getCurrentUser().getUid())) {
+                        mReviewList.add(0, review);
+                        mAdapter.notifyItemInserted(0);
+                    } else {
+                        int currentSize = mReviewList.size();
+                        mReviewList.add(review);
+                        mAdapter.notifyItemInserted(currentSize);
+                    }
+                    updateReviewListInPlaceDetailObject();
+                }
+
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                    Review review = dataSnapshot.getValue(Review.class);
+
+                    mReviewList.set(0, review);
+
+                    mAdapter.notifyItemChanged(0);
+                    viewHolder.reviewRecyclerView.scrollToPosition(0);
+
+                    updateReviewListInPlaceDetailObject();
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            };
+            mReviewsReference.child(mPlaceDetail.getId()).addChildEventListener(mChildEventReviewsListener);
+        }
+    }
+
+    private void detachDatabaseListener() {
+        if (mChildEventReviewsListener != null) {
+            mReviewsReference.child(mPlaceDetail.getId()).removeEventListener(mChildEventReviewsListener);
+            mChildEventReviewsListener = null;
+        }
+    }
+
+    private void updateReviewListInPlaceDetailObject() {
+        mPlaceDetail.setReviews(mReviewList);
+        viewHolder.progressBar.setVisibility(View.INVISIBLE);
     }
 
     /*
@@ -312,8 +481,19 @@ public class DetailFragment extends Fragment {
             if (mFlagActivity == GooglePlacesAutoCompleteAdapter.FLAG_SEARCH_LIST_ADAPTER || mFlagActivity == PlaceListAdapter.FLAG_PLACE_LIST_ADAPTER) {
                 updateUI();
             }
+
+            // enable the Like button
+            viewHolder.likeButton.setEnabled(true);
+
             populateReviewList(list);
+            attachReviewsListener();
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        detachDatabaseListener();
     }
 
     @Override
@@ -326,7 +506,6 @@ public class DetailFragment extends Fragment {
         mReviewList.addAll(list);
 
         mAdapter.notifyItemRangeInserted(0, list.size());
-        viewHolder.reviewRecyclerView.setAdapter(mAdapter);
 
         viewHolder.progressBar.setVisibility(View.INVISIBLE);
     }
@@ -381,24 +560,5 @@ public class DetailFragment extends Fragment {
             intent.putExtra(PlaceDetailService.PLACE_ID_KEY, mPlaceDetail);
             getContext().startService(intent);
         }
-    }
-
-    private ContentValues valuesToDB(PlaceDetail placeDetail) {
-        ContentValues contentValues = new ContentValues();
-
-        contentValues.put(DBContract.PlacesEntry.COLUMN_PLACE_ID, placeDetail.getId());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_NAME, placeDetail.getName());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_ADDRESS, placeDetail.getAddress());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_IMAGE_URL, placeDetail.getImage_url());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_LATITUDE, String.valueOf(placeDetail.getLatitude()));
-        contentValues.put(DBContract.PlacesEntry.COLUMN_LONGITUDE, String.valueOf(placeDetail.getLongitude()));
-        contentValues.put(DBContract.PlacesEntry.COLUMN_RATING, String.valueOf(placeDetail.getRating()));
-        contentValues.put(DBContract.PlacesEntry.COLUMN_LOCALITY, placeDetail.getLocality());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_COUNTRY, placeDetail.getCountry());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_POSTCODE, placeDetail.getPostCode());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_WEBSITE, placeDetail.getWebsite());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_PHONE, placeDetail.getInternationalPhone());
-
-        return contentValues;
     }
 }

@@ -79,6 +79,7 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
 
     public interface PlacesCallback {
         void radiusAchieved(float radius);
+
         void placesListAchieved(ArrayList<PlaceDetail> list);
     }
 
@@ -89,6 +90,7 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
 
         resetOffsetAndNextPageToken();
         refresh();
+        //refreshMock();
     }
 
     private class ViewHolder {
@@ -188,7 +190,7 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
                         loadMorePlaces = true;
                         placesAreBeingLoaded = true;
                         refreshMock();
-                    }*/
+                    } */
                 }
             }
         });
@@ -228,18 +230,6 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
             //refreshMock();
         }
         return view;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
     }
 
     private void resetOffsetAndNextPageToken() {

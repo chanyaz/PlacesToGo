@@ -18,6 +18,14 @@ public class Review implements Parcelable {
 
     }
 
+    public Review(String user_name, String review_text, String user_rating, String review_time_friendly, String profile_image_url) {
+        this.user_name = user_name;
+        this.review_text = review_text;
+        this.user_rating = user_rating;
+        this.review_time_friendly = review_time_friendly;
+        this.profile_image_url = profile_image_url;
+    }
+
     protected Review(Parcel in) {
         user_name = in.readString();
         review_text = in.readString();

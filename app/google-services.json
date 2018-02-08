@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1092875763501",
+    "firebase_url": "https://placestogo-39f9d.firebaseio.com",
+    "project_id": "placestogo-39f9d",
+    "storage_bucket": "placestogo-39f9d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1092875763501:android:ec8ddff0a2f5d413",
+        "android_client_info": {
+          "package_name": "com.example.dangkhoa.placestogo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1092875763501-rhpsjuh2a0rrhveuep15eol1kgs1b8fg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dangkhoa.placestogo",
+            "certificate_hash": "00dc81cb24066b14369bbefb97690d0f5f0ab304"
+          }
+        },
+        {
+          "client_id": "1092875763501-9eajel725fsen70qegkt5cnud84rrj6r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYCDp9avbQPS9qoHWThlxKYIkeQUk3jJc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1092875763501-9eajel725fsen70qegkt5cnud84rrj6r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -20,6 +20,21 @@
         </menu>
     </item>
 
+    <item android:title="@string/account">
+
+        <menu>
+            <item
+                android:id="@+id/menu_account"
+                android:icon="@drawable/ic_nav_drawer_star"
+                android:title="@string/account"></item>
+
+            <item
+                android:id="@+id/menu_signout"
+                android:icon="@android:drawable/ic_menu_preferences"
+                android:title="@string/signout"></item>
+        </menu>
+    </item>
+
     <item android:title="@string/menu_item_communication">
         <menu>
             <item
