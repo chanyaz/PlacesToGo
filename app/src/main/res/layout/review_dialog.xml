@@ -1,13 +1,13 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/grey_200">
+    android:layout_height="match_parent">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
+        android:background="@drawable/review_dialog_round_background"
+        android:padding="14dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
@@ -24,7 +24,8 @@
                     style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/rate" />
+                    android:text="@string/rate"
+                    android:textSize="18sp" />
 
                 <RatingBar
                     android:id="@+id/reviewRatingBar"
@@ -49,17 +50,19 @@
                     style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/review" />
+                    android:text="@string/review"
+                    android:textSize="18sp" />
 
                 <EditText
                     android:id="@+id/reviewEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:background="@color/white"
+                    android:background="@drawable/round_corner_background"
                     android:gravity="left|top"
                     android:inputType="textMultiLine"
-                    android:lines="7" />
+                    android:lines="7"
+                    android:padding="10dp" />
 
             </LinearLayout>
 
@@ -72,8 +75,10 @@
                 <Button
                     android:id="@+id/reviewCancelButton"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_marginRight="6dp"
                     android:layout_weight="1"
+                    android:background="@drawable/round_corner_background"
                     android:backgroundTint="@color/colorPrimary"
                     android:text="@string/cancel"
                     android:textColor="@color/white" />
@@ -81,8 +86,10 @@
                 <Button
                     android:id="@+id/reviewSubmitButton"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_marginLeft="6dp"
                     android:layout_weight="1"
+                    android:background="@drawable/round_corner_background"
                     android:backgroundTint="@color/colorPrimary"
                     android:text="@string/submit"
                     android:textColor="@color/white" />

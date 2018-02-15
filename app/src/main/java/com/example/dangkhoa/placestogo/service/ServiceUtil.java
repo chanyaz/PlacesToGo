@@ -4,7 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.example.dangkhoa.placestogo.R;
-import com.example.dangkhoa.placestogo.Util;
+import com.example.dangkhoa.placestogo.Utils.Util;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.io.BufferedReader;
@@ -48,6 +48,7 @@ public class ServiceUtil {
 
     public static final String OPENING_HOURS = "opening_hours";
     public static final String OPEN_NOW = "open_now";
+    public static final String WEEKDAY_TEXT = "weekday_text";
 
     public static final String INTERNATIONAL_PHONE_NUMBER = "international_phone_number";
     public static final String WEBSITE = "website";

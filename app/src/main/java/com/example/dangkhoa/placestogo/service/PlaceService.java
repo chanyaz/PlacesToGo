@@ -7,7 +7,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.example.dangkhoa.placestogo.PlaceListFragment;
-import com.example.dangkhoa.placestogo.Util;
+import com.example.dangkhoa.placestogo.Utils.Util;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.google.android.gms.maps.model.LatLng;
 

@@ -1,15 +1,14 @@
-package com.example.dangkhoa.placestogo;
+package com.example.dangkhoa.placestogo.Utils;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 
+import com.example.dangkhoa.placestogo.R;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.example.dangkhoa.placestogo.database.DBContract;
 import com.firebase.ui.auth.AuthUI;
@@ -17,6 +16,7 @@ import com.google.android.gms.maps.model.LatLng;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -26,22 +26,35 @@ import java.util.Date;
 
 public class Util {
 
-    public static boolean checkInternetConnection(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isConnected();
-    }
-
+    /**
+     * Convert a location LatLng object to String
+     *
+     * @param latLng
+     * @return
+     */
     public static String locationToString(LatLng latLng) {
         return String.valueOf(latLng.latitude) + "," + String.valueOf(latLng.longitude);
     }
 
+    /**
+     * Convert a String to a LatLng location object
+     *
+     * @param mStringLoc
+     * @return
+     */
     public static LatLng stringToLocation(String mStringLoc) {
         String[] strings = mStringLoc.split(",");
         LatLng location = new LatLng(Double.parseDouble(strings[0]), Double.parseDouble(strings[1]));
         return location;
     }
 
+    /**
+     * Get photo URL from photo reference retrieved from Google Places API
+     *
+     * @param context
+     * @param photo_ref
+     * @return
+     */
     public static String constructImageURL(Context context, String photo_ref) {
         String MAX_WIDTH = "300";
         String api = "&key=" + context.getString(R.string.android_api_key);
@@ -49,6 +62,12 @@ public class Util {
         return url;
     }
 
+    /**
+     * Convert a place type stored in strings.xml to a place label to be displayed
+     *
+     * @param placeType
+     * @return
+     */
     public static String placeTypeFromValueToLabel(String placeType) {
         String[] list = placeType.split("_");
         String label = "";
@@ -68,6 +87,12 @@ public class Util {
         return label;
     }
 
+    /**
+     * Create a share intent
+     *
+     * @param context
+     * @param message
+     */
     public static void shareIntent(Context context, String message) {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
@@ -76,18 +101,40 @@ public class Util {
         context.startActivity(Intent.createChooser(shareIntent, context.getResources().getString(R.string.share_via)));
     }
 
+    /**
+     * Create a call intent
+     *
+     * @param context
+     * @param phoneNumber
+     */
     public static void createCallIntent(Context context, String phoneNumber) {
         Intent phoneIntent = new Intent(Intent.ACTION_DIAL);
         phoneIntent.setData(Uri.parse("tel:" + phoneNumber.replaceAll("-", "")));
         context.startActivity(phoneIntent);
     }
 
+    /**
+     * Create a map intent
+     *
+     * @param context
+     * @param lat
+     * @param lon
+     * @param label
+     */
     public static void createMapIntent(Context context, Double lat, Double lon, String label) {
         Intent intent = new Intent(Intent.ACTION_VIEW,
                 Uri.parse("geo:<" + lat + ">,<" + lon + ">?q=<" + lat + ">,<" + lon + ">(" + label + ")"));
         context.startActivity(intent);
     }
 
+    /**
+     * Request Uber
+     *
+     * @param context
+     * @param lat
+     * @param lon
+     * @param dropOffName
+     */
     public static void requestUber(final Context context, Double lat, Double lon, String dropOffName) {
 
         final String UBER_PACKAGE_NAME = "com.ubercab";
@@ -146,26 +193,14 @@ public class Util {
         }
     }
 
-    // this function is used to convert a place detail object into content values
-    public static ContentValues valuesToDB(PlaceDetail placeDetail) {
-        ContentValues contentValues = new ContentValues();
-
-        contentValues.put(DBContract.PlacesEntry.COLUMN_PLACE_ID, placeDetail.getId());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_NAME, placeDetail.getName());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_ADDRESS, placeDetail.getAddress());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_IMAGE_URL, placeDetail.getImage_url());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_LATITUDE, String.valueOf(placeDetail.getLatitude()));
-        contentValues.put(DBContract.PlacesEntry.COLUMN_LONGITUDE, String.valueOf(placeDetail.getLongitude()));
-        contentValues.put(DBContract.PlacesEntry.COLUMN_RATING, String.valueOf(placeDetail.getRating()));
-        contentValues.put(DBContract.PlacesEntry.COLUMN_LOCALITY, placeDetail.getLocality());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_COUNTRY, placeDetail.getCountry());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_POSTCODE, placeDetail.getPostCode());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_WEBSITE, placeDetail.getWebsite());
-        contentValues.put(DBContract.PlacesEntry.COLUMN_PHONE, placeDetail.getInternationalPhone());
-
-        return contentValues;
-    }
-
+    /**
+     * Convert radius in mile and kilometer into meter
+     *
+     * @param context
+     * @param radius
+     * @param unit
+     * @return
+     */
     public static String radiusInMeter(Context context, float radius, String unit) {
         float kilometerConst = 1000f;
         float mileConst = 1609.34f;
@@ -177,6 +212,11 @@ public class Util {
         }
     }
 
+    /**
+     * Get current time
+     *
+     * @return
+     */
     private static final String DATE_FORMAT = "EEE MMM dd hh:mm:ss yyyy";
 
     public static String getCurrentTime() {
@@ -186,6 +226,12 @@ public class Util {
         return simpleDateFormat.format(currentTime);
     }
 
+    /**
+     * Check if a formatted String is a valid date
+     *
+     * @param inDate
+     * @return
+     */
     public static boolean isValidDate(String inDate) {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
         dateFormat.setLenient(false);
@@ -197,6 +243,13 @@ public class Util {
         return true;
     }
 
+    /**
+     * Return a time friendly message
+     *
+     * @param context
+     * @param receivedTime
+     * @return
+     */
     public static String timeFriendly(Context context, String receivedTime) {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
 
@@ -221,7 +274,7 @@ public class Util {
             } else if (diffHours == 0 && diffDays == 0) {
 
                 if (diffMinutes == 1) {
-                    timeDiff = diffMinutes + " " + context.getString(R.string.minute_ago);
+                    timeDiff = context.getString(R.string.a_minute_ago);
                 } else {
                     timeDiff = diffMinutes + " " + context.getString(R.string.minutes_ago);
                 }
@@ -229,7 +282,7 @@ public class Util {
             } else if (diffDays == 0) {
 
                 if (diffHours == 1) {
-                    timeDiff = diffHours + " " + context.getString(R.string.hour_ago);
+                    timeDiff = context.getString(R.string.an_hour_ago);
                 } else {
                     timeDiff = diffHours + " " + context.getString(R.string.hours_ago);
                 }
@@ -237,7 +290,7 @@ public class Util {
             } else if (diffDays > 0 && diffDays <= 7) {
 
                 if (diffDays == 1) {
-                    timeDiff = diffDays + " " + context.getString(R.string.day_ago);
+                    timeDiff = context.getString(R.string.a_day_ago);
                 } else {
                     timeDiff = diffDays + " " + context.getString(R.string.days_ago);
                 }
@@ -247,7 +300,7 @@ public class Util {
                 int weeks = (int) diffDays / 7;
 
                 if (weeks == 1) {
-                    timeDiff = weeks + " " + context.getString(R.string.week_ago);
+                    timeDiff = context.getString(R.string.a_week_ago);
                 } else {
                     timeDiff = weeks + " " + context.getString(R.string.weeks_ago);
                 }
@@ -257,7 +310,7 @@ public class Util {
                 int months = (int) diffDays / 30;
 
                 if (months == 1) {
-                    timeDiff = months + " " + context.getString(R.string.month_ago);
+                    timeDiff = context.getString(R.string.a_month_ago);
                 } else {
                     timeDiff = months + " " + context.getString(R.string.months_ago);
                 }
@@ -268,11 +321,5 @@ public class Util {
         }
 
         return timeDiff;
-    }
-
-    public static void signOut(Context context) {
-        // delete all entries within table Places in sql database
-        context.getContentResolver().delete(DBContract.PlacesEntry.CONTENT_URI, null, null);
-        AuthUI.getInstance().signOut(context);
     }
 }

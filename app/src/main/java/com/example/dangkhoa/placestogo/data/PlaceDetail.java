@@ -31,6 +31,9 @@ public class PlaceDetail implements Parcelable {
 
     private String internationalPhone;
 
+    // ArrayList to store opening hours for each day
+    private ArrayList<String> openingHours = new ArrayList<>();
+
     private ArrayList<Review> reviews = new ArrayList<>();
 
 
@@ -38,7 +41,7 @@ public class PlaceDetail implements Parcelable {
 
     }
 
-    public PlaceDetail(String id, String name, String address, String image_url, double latitude, double longitude, double rating, int opening) {
+    public PlaceDetail(String id, String name, String address, String image_url, double latitude, double longitude, double rating, int opening, ArrayList<String> openingHours) {
         this.id = id;
         this.name = name;
         this.address = address;
@@ -52,24 +55,8 @@ public class PlaceDetail implements Parcelable {
         this.locality = null;
         this.postCode = null;
         this.internationalPhone = null;
+        this.openingHours = openingHours;
         this.reviews = new ArrayList<>();
-    }
-
-    protected PlaceDetail(Parcel in) {
-        id = in.readString();
-        name = in.readString();
-        address = in.readString();
-        image_url = in.readString();
-        rating = in.readDouble();
-        latitude = in.readDouble();
-        longitude = in.readDouble();
-        opening = in.readInt();
-        website = in.readString();
-        locality = in.readString();
-        country = in.readString();
-        postCode = in.readString();
-        internationalPhone = in.readString();
-        in.readTypedList(reviews, Review.CREATOR);
     }
 
     public static final Parcelable.Creator<PlaceDetail> CREATOR = new Parcelable.Creator<PlaceDetail>() {
@@ -196,9 +183,35 @@ public class PlaceDetail implements Parcelable {
         this.reviews = reviews;
     }
 
+    public ArrayList<String> getOpeningHours() {
+        return openingHours;
+    }
+
+    public void setOpeningHours(ArrayList<String> openingHours) {
+        this.openingHours = openingHours;
+    }
+
     @Override
     public int describeContents() {
         return 0;
+    }
+
+    protected PlaceDetail(Parcel in) {
+        id = in.readString();
+        name = in.readString();
+        address = in.readString();
+        image_url = in.readString();
+        rating = in.readDouble();
+        latitude = in.readDouble();
+        longitude = in.readDouble();
+        opening = in.readInt();
+        website = in.readString();
+        locality = in.readString();
+        country = in.readString();
+        postCode = in.readString();
+        internationalPhone = in.readString();
+        in.readTypedList(reviews, Review.CREATOR);
+        in.readStringList(openingHours);
     }
 
     @Override
@@ -217,6 +230,7 @@ public class PlaceDetail implements Parcelable {
         dest.writeString(postCode);
         dest.writeString(internationalPhone);
         dest.writeTypedList(reviews);
+        dest.writeStringList(openingHours);
     }
 
 }

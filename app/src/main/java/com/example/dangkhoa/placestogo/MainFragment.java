@@ -8,13 +8,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +24,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.dangkhoa.placestogo.Utils.NetworkUtil;
+import com.example.dangkhoa.placestogo.Utils.Util;
 import com.example.dangkhoa.placestogo.service.AddressLookupService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -39,8 +41,8 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
     private class ViewHolder {
 
         public ImageButton locationButton;
-        public TextView userLocationTextView;
 
+        public TextView userLocationTextView;
         public TextView restaurantText, cafeText, takeawayText, storeText, busText;
 
         public LinearLayout restaurantLayout, cafeLayout, takeawayLayout, storeLayout, busStationLayout, moreLayout;
@@ -73,35 +75,36 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
 
-    private boolean mRequestingLocationUpdates;
-
     private String mLastAddress;
     private String mLastErrorMessage;
 
-    private AddressLookupServiceReceiver receiver;
+    private boolean requestLocationOnNetworkReconnected;
 
-    private final String LOCATION_SAVE_KEY = "location_save_key";
-    private final String REQUESTING_LOCATION_STATE_SAVE_KEY = "requesting_location_state_save_key";
-    private final String ERROR_MESSAGE_SAVE_KEY = "error_message_save_key";
-
-    private final String FRAGMENT_PLACE_TYPE_TAG = "fragment_place_type_tag";
-
-    // store place type value
-    private String mPlaceType;
+    private AddressLookupServiceReceiver addressReceiver;
+    private NetworkChangeReceiver networkChangeReceiver;
 
     // keys to send package to PlaceListActivity
     public static final String PLACE_TYPE_KEY = "place_type_key";
     public static final String CURRENT_LOCATION_KEY = "current_location_key";
 
+    private static final String REQUEST_SERVICE_ON_NETWORK_RECONNECTED = "request on reconnected";
+
+    private static final String LAST_ADDRESS_SAVE_KEY = "last address save key";
+    private static final String LAST_LOCATION_SAVE_KEY = "last location save key";
+
+    // store place type value
+    private String mPlaceType;
+
     interface MorePlacesCallback {
+        // callback to MainActivity to load PlaceTypeList fragment
         void displayFragmentPlaceTypeList(Location location);
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putParcelable(LOCATION_SAVE_KEY, mLastLocation);
-        outState.putBoolean(REQUESTING_LOCATION_STATE_SAVE_KEY, mRequestingLocationUpdates);
-        outState.putString(ERROR_MESSAGE_SAVE_KEY, mLastErrorMessage);
+        outState.putBoolean(REQUEST_SERVICE_ON_NETWORK_RECONNECTED, requestLocationOnNetworkReconnected);
+        outState.putString(LAST_ADDRESS_SAVE_KEY, mLastAddress);
+        outState.putParcelable(LAST_LOCATION_SAVE_KEY, mLastLocation);
         super.onSaveInstanceState(outState);
     }
 
@@ -113,13 +116,14 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         ((AppCompatActivity) getContext()).getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 
         if (savedInstanceState != null) {
-            mLastLocation = savedInstanceState.getParcelable(LOCATION_SAVE_KEY);
-            mLastErrorMessage = savedInstanceState.getString(ERROR_MESSAGE_SAVE_KEY);
-            mRequestingLocationUpdates = savedInstanceState.getBoolean(REQUESTING_LOCATION_STATE_SAVE_KEY);
+            requestLocationOnNetworkReconnected = savedInstanceState.getBoolean(REQUEST_SERVICE_ON_NETWORK_RECONNECTED);
+            mLastAddress = savedInstanceState.getString(LAST_ADDRESS_SAVE_KEY);
+            mLastLocation = savedInstanceState.getParcelable(LAST_LOCATION_SAVE_KEY);
         } else {
+            mLastAddress = null;
             mLastLocation = null;
             mLastErrorMessage = null;
-            mRequestingLocationUpdates = true;
+            requestLocationOnNetworkReconnected = false;
         }
     }
 
@@ -130,12 +134,17 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
 
         viewHolder = new ViewHolder(view);
 
+        // register for Address Receiver Service
         IntentFilter intentFilterAddress = new IntentFilter(AddressLookupServiceReceiver.ADDRESS_RECEIVER);
         intentFilterAddress.addCategory(Intent.CATEGORY_DEFAULT);
-        receiver = new AddressLookupServiceReceiver();
-        getContext().registerReceiver(receiver, intentFilterAddress);
+        addressReceiver = new AddressLookupServiceReceiver();
+        getContext().registerReceiver(addressReceiver, intentFilterAddress);
 
-        buildGoogleApiClient();
+        // register for Network Receiver Service
+        IntentFilter intentFilterNetwork = new IntentFilter();
+        intentFilterNetwork.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        networkChangeReceiver = new NetworkChangeReceiver();
+        getContext().registerReceiver(networkChangeReceiver, intentFilterNetwork);
 
         viewHolder.locationButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -196,6 +205,13 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
                 ((MorePlacesCallback) getContext()).displayFragmentPlaceTypeList(mLastLocation);
             }
         });
+
+        if (mLastAddress == null) {
+            buildGoogleApiClient();
+        } else {
+            updateUI();
+        }
+
         return view;
     }
 
@@ -205,7 +221,9 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         if (mLastLocation == null) {
             Toast.makeText(getContext(), getResources().getString(R.string.location_unavailable), Toast.LENGTH_SHORT).show();
             // after informing users, we should start getting location again so that users don't need to do this themselves
-            startLocationUpdate();
+            if (mGoogleApiClient != null) {
+                startLocationUpdate();
+            }
         } else {
             Intent intent = new Intent(getContext(), PlaceListActivity.class);
             intent.putExtra(PLACE_TYPE_KEY, mPlaceType);
@@ -229,23 +247,56 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
     }
 
     private void stopLocationUpdate() {
-        try {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        } catch (IllegalStateException e) {
+        if (mGoogleApiClient != null) {
+            try {
+                LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            } catch (IllegalStateException e) {
 
+            }
         }
     }
 
     private void startLocationUpdate() {
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
             requestPermission();
+
         } else {
-            if (!Util.checkInternetConnection(getContext())) {
-                Toast.makeText(getContext(), getResources().getString(R.string.no_internet_connection_message), Toast.LENGTH_SHORT).show();
+            if (!NetworkUtil.checkInternetConnection(getContext()) && !requestLocationOnNetworkReconnected) {
+
+                android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+                builder.setMessage(getContext().getString(R.string.location_load_no_internet_connection))
+                        .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                // set this variable to true so that when user turns on internet MANUALLY, location will be automatically detected
+                                requestLocationOnNetworkReconnected = true;
+                                dialogInterface.dismiss();
+                            }
+                        })
+                        .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                // turn on wifi
+                                NetworkUtil.setWifiState(getContext(), true);
+                                requestLocationOnNetworkReconnected = true;
+
+                                viewHolder.userLocationTextView.setText(getString(R.string.detecting_location));
+                            }
+                        });
+
+                android.app.AlertDialog alertDialog = builder.create();
+                alertDialog.show();
             } else {
-                createLocationRequest();
-                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+                viewHolder.userLocationTextView.setText(getString(R.string.detecting_location));
+
+                if (mGoogleApiClient != null) {
+                    createLocationRequest();
+                    LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+                } else {
+                    buildGoogleApiClient();
+                }
             }
         }
     }
@@ -268,43 +319,40 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
     public void onStart() {
         super.onStart();
         // Connect the client
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        stopLocationUpdate();
+        if (mLastAddress == null) {
+            mGoogleApiClient.connect();
+        }
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if (mGoogleApiClient.isConnected()) {
-            // Disconnect the client
-            mGoogleApiClient.disconnect();
+        if (mGoogleApiClient != null) {
+            if (mGoogleApiClient.isConnected()) {
+                // Disconnect the client
+                mGoogleApiClient.disconnect();
+            }
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
-            startLocationUpdate();
-        }
+
     }
 
     @Override
-
     public void onDestroy() {
-        getContext().unregisterReceiver(receiver);
         super.onDestroy();
+        getContext().unregisterReceiver(addressReceiver);
+        getContext().unregisterReceiver(networkChangeReceiver);
+        stopLocationUpdate();
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         // Make sure location request is not called when the app is resumed
-        if (mLastLocation == null && mRequestingLocationUpdates) {
+        if (mLastLocation == null) {
             startLocationUpdate();
         }
     }
@@ -379,6 +427,29 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
             mLastErrorMessage = errorMessage;
 
             updateUI();
+        }
+    }
+
+    public class NetworkChangeReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(final Context context, final Intent intent) {
+
+            int status = NetworkUtil.getConnectivityStatusString(context);
+
+            if (status == NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
+
+            } else {
+                if (requestLocationOnNetworkReconnected) {
+
+                    if (mGoogleApiClient != null) {
+                        startLocationUpdate();
+                    } else {
+                        buildGoogleApiClient();
+                    }
+
+                }
+            }
         }
     }
 

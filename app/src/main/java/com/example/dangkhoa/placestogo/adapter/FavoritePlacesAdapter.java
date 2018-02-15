@@ -17,9 +17,8 @@ import android.widget.TextView;
 
 import com.example.dangkhoa.placestogo.DetailActivity;
 import com.example.dangkhoa.placestogo.R;
-import com.example.dangkhoa.placestogo.data.PlaceDetail;
+import com.example.dangkhoa.placestogo.Utils.SQLiteUtil;
 import com.example.dangkhoa.placestogo.database.DBContract;
-import com.squareup.picasso.Picasso;
 
 /**
  * Created by dangkhoa on 23/10/2017.
@@ -59,11 +58,11 @@ public class FavoritePlacesAdapter extends RecyclerView.Adapter<FavoritePlacesAd
 
         String thumbnail = mCursor.getString(mCursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_IMAGE_URL));
         if (thumbnail != null && !thumbnail.equals("")) {
-            Picasso.with(mContext)
+            GlideApp.with(mContext)
                     .load(thumbnail)
                     .into(holder.thumbnail);
         } else {
-            Picasso.with(mContext)
+            GlideApp.with(mContext)
                     .load(R.mipmap.ic_launcher)
                     .into(holder.thumbnail);
         }
@@ -118,13 +117,13 @@ public class FavoritePlacesAdapter extends RecyclerView.Adapter<FavoritePlacesAd
             Intent intent = new Intent(mContext, DetailActivity.class);
 
             Bundle bundle = new Bundle();
-            bundle.putParcelable(DetailActivity.PLACE_BUNDLE_KEY, cursorPlace(mCursor));
+            bundle.putParcelable(DetailActivity.PLACE_BUNDLE_KEY, SQLiteUtil.cursorPlace(mCursor));
             bundle.putInt(DetailActivity.FLAG_KEY, FLAG_FAVORITE_PLACE_LIST_ADAPTER);
 
             intent.putExtra(DetailActivity.INTENT_PACKAGE, bundle);
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation((Activity)mContext, thumbnail, thumbnail.getTransitionName());
+                ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation((Activity) mContext, thumbnail, thumbnail.getTransitionName());
 
                 ((Activity) mContext).getWindow().setSharedElementEnterTransition(TransitionInflater.from(mContext).inflateTransition(R.transition.curve));
                 mContext.startActivity(intent, options.toBundle());
@@ -134,24 +133,4 @@ public class FavoritePlacesAdapter extends RecyclerView.Adapter<FavoritePlacesAd
 
         }
     }
-
-    private PlaceDetail cursorPlace(Cursor cursor) {
-        PlaceDetail placeDetail = new PlaceDetail();
-
-        placeDetail.setId(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_PLACE_ID)));
-        placeDetail.setName(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_NAME)));
-        placeDetail.setAddress(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_ADDRESS)));
-        placeDetail.setImage_url(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_IMAGE_URL)));
-        placeDetail.setLatitude(Double.parseDouble(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_LATITUDE))));
-        placeDetail.setLongitude(Double.parseDouble(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_LONGITUDE))));
-        placeDetail.setRating(Double.parseDouble(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_RATING))));
-        placeDetail.setLocality(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_LOCALITY)));
-        placeDetail.setCountry(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_COUNTRY)));
-        placeDetail.setPostCode(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_POSTCODE)));
-        placeDetail.setWebsite(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_WEBSITE)));
-        placeDetail.setInternationalPhone(cursor.getString(cursor.getColumnIndex(DBContract.PlacesEntry.COLUMN_PHONE)));
-
-        return placeDetail;
-    }
-
 }

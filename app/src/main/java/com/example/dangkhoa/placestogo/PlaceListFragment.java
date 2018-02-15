@@ -3,10 +3,12 @@ package com.example.dangkhoa.placestogo;
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -19,9 +21,10 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.example.dangkhoa.placestogo.RecyclerViewDecoration.PlaceListItemSpacing;
+import com.example.dangkhoa.placestogo.Utils.NetworkUtil;
+import com.example.dangkhoa.placestogo.Utils.Util;
 import com.example.dangkhoa.placestogo.adapter.PlaceListAdapter;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.example.dangkhoa.placestogo.service.PlaceService;
@@ -44,6 +47,8 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
     private static final String PLACE_LIST_SAVE_KEY = "place_list_save_key";
     private static final String RECYCLER_VIEW_STATE_SAVE_KEY = "recyler_view_state_save_key";
     private static final String NEXT_PAGE_TOKEN_SAVE_KEY = "next_page_token_save_key";
+
+    private boolean requestLocationOnNetworkReconnected = false;
 
     private float RADIUS;
     private String UNIT;
@@ -72,6 +77,7 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
     private GridLayoutManager gridLayoutManager;
 
     private PlaceServiceReceiver receiver;
+    private NetworkChangeReceiver networkChangeReceiver;
 
     private PlaceListAdapter placeListAdapter;
 
@@ -129,6 +135,11 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
         intentFilterAddress.addCategory(Intent.CATEGORY_DEFAULT);
         receiver = new PlaceListFragment.PlaceServiceReceiver();
         getContext().registerReceiver(receiver, intentFilterAddress);
+
+        IntentFilter intentFilterNetwork = new IntentFilter();
+        intentFilterNetwork.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        networkChangeReceiver = new NetworkChangeReceiver();
+        getContext().registerReceiver(networkChangeReceiver, intentFilterNetwork);
 
         if (savedInstanceState != null) {
             mLastLocation = savedInstanceState.getParcelable(LOCATION_BUNDLE_KEY);
@@ -238,7 +249,7 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
     }
 
     private void refresh() {
-        if (!Util.checkInternetConnection(getContext())) {
+        if (!NetworkUtil.checkInternetConnection(getContext())) {
             mIsRefreshing = false;
             viewHolder.mSwipeRefreshLayout.setRefreshing(mIsRefreshing);
 
@@ -247,7 +258,38 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
                 loadMorePlaces = false;
                 placesAreBeingLoaded = false;
             }
-            Toast.makeText(getContext(), getResources().getString(R.string.no_internet_connection_message), Toast.LENGTH_SHORT).show();
+
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+            builder.setMessage(getContext().getString(R.string.places_load_no_internet_connection))
+                    .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            // make sure that when internet connection is reconnected, it will get more items if available
+                            if (loadMorePlaces) {
+                                loadMorePlaces = false;
+                                placesAreBeingLoaded = false;
+                            }
+
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            // turn on wifi
+                            NetworkUtil.setWifiState(getContext(), true);
+                            requestLocationOnNetworkReconnected = true;
+
+                            loadMorePlaces = true;
+                            placesAreBeingLoaded = true;
+
+                            viewHolder.mSwipeRefreshLayout.setRefreshing(true);
+                        }
+                    });
+
+            android.app.AlertDialog alertDialog = builder.create();
+            alertDialog.show();
+
         } else {
             mIsRefreshing = true;
             viewHolder.mSwipeRefreshLayout.setRefreshing(mIsRefreshing);
@@ -310,6 +352,7 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
     public void onDestroy() {
         super.onDestroy();
         getContext().unregisterReceiver(receiver);
+        getContext().unregisterReceiver(networkChangeReceiver);
         PreferenceManager.getDefaultSharedPreferences(getContext()).unregisterOnSharedPreferenceChangeListener(this);
     }
 
@@ -327,6 +370,24 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
             updateUI(results);
         }
     }
+
+    public class NetworkChangeReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(final Context context, final Intent intent) {
+
+            int status = NetworkUtil.getConnectivityStatusString(context);
+
+            if (status == NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
+
+            } else {
+                if (requestLocationOnNetworkReconnected) {
+                    refresh();
+                }
+            }
+        }
+    }
+
     // -------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // TESTING FUNCTIONS
 
@@ -337,16 +398,16 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
     private ArrayList<PlaceDetail> mockList() {
         ArrayList<PlaceDetail> list = new ArrayList<>();
 
-        PlaceDetail placeDetail1 = new PlaceDetail("id1", "name1", "address1", "image_url1", 1.00, 1.00, 1, 1);
-        PlaceDetail placeDetail2 = new PlaceDetail("id2", "name2", "address2", "image_url1", 1.00, 1.00, 1, 1);
-        PlaceDetail placeDetail3 = new PlaceDetail("id3", "name3", "address3", "image_url1", 1.00, 1.00, 1, 1);
-        PlaceDetail placeDetail4 = new PlaceDetail("id4", "name4", "address4", "image_url1", 1.00, 1.00, 1, 1);
-        PlaceDetail placeDetail5 = new PlaceDetail("id5", "name5", "address5", "image_url1", 1.00, 1.00, 1, 1);
-        PlaceDetail placeDetail6 = new PlaceDetail("id6", "name6", "address6", "image_url1", 1.00, 1.00, 1, 1);
-        PlaceDetail placeDetail7 = new PlaceDetail("id7", "name7", "address7", "image_url1", 1.00, 1.00, 1, 1);
-        PlaceDetail placeDetail8 = new PlaceDetail("id8", "name8", "address8", "image_url1", 1.00, 1.00, 1, 1);
-        PlaceDetail placeDetail9 = new PlaceDetail("id9", "name9", "address9", "image_url1", 1.00, 1.00, 1, 1);
-        PlaceDetail placeDetail10 = new PlaceDetail("id10", "name10", "address10", "image_url1", 1.00, 1.00, 1, 1);
+        PlaceDetail placeDetail1 = new PlaceDetail("id1", "name1", "address1", "image_url1", 1.00, 1.00, 1, 1, null);
+        PlaceDetail placeDetail2 = new PlaceDetail("id2", "name2", "address2", "image_url1", 1.00, 1.00, 1, 1, null);
+        PlaceDetail placeDetail3 = new PlaceDetail("id3", "name3", "address3", "image_url1", 1.00, 1.00, 1, 1, null);
+        PlaceDetail placeDetail4 = new PlaceDetail("id4", "name4", "address4", "image_url1", 1.00, 1.00, 1, 1, null);
+        PlaceDetail placeDetail5 = new PlaceDetail("id5", "name5", "address5", "image_url1", 1.00, 1.00, 1, 1, null);
+        PlaceDetail placeDetail6 = new PlaceDetail("id6", "name6", "address6", "image_url1", 1.00, 1.00, 1, 1, null);
+        PlaceDetail placeDetail7 = new PlaceDetail("id7", "name7", "address7", "image_url1", 1.00, 1.00, 1, 1, null);
+        PlaceDetail placeDetail8 = new PlaceDetail("id8", "name8", "address8", "image_url1", 1.00, 1.00, 1, 1, null);
+        PlaceDetail placeDetail9 = new PlaceDetail("id9", "name9", "address9", "image_url1", 1.00, 1.00, 1, 1, null);
+        PlaceDetail placeDetail10 = new PlaceDetail("id10", "name10", "address10", "image_url1", 1.00, 1.00, 1, 1, null);
 
         list.add(placeDetail1);
         list.add(placeDetail2);

@@ -20,7 +20,7 @@
                 android:layout_height="match_parent"
                 android:background="@android:color/transparent"
                 app:contentScrim="@color/colorPrimary"
-                app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed">
+                app:layout_scrollFlags="scroll|enterAlwaysCollapsed|enterAlways">
 
                 <ImageView
                     android:id="@+id/place_back_drop_imageView"
@@ -44,10 +44,10 @@
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/detail_fragment_favorite_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_margin="@dimen/fab_margin"
-            android:backgroundTint="@color/teal_400"
+            android:backgroundTint="@color/light_blue_800"
             android:src="@drawable/ic_favorite"
             app:layout_anchor="@id/detail_fragment_app_bar"
             app:layout_anchorGravity="bottom|end" />

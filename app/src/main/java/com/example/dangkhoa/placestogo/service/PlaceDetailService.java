@@ -83,10 +83,23 @@ public class PlaceDetailService extends IntentService {
 
             if (resultObj.has(ServiceUtil.OPENING_HOURS)) {
                 JSONObject openingHoursObj = resultObj.getJSONObject(ServiceUtil.OPENING_HOURS);
+
                 if (openingHoursObj.getBoolean(ServiceUtil.OPEN_NOW)) {
                     placeDetail.setOpening(1); // opening
                 } else {
                     placeDetail.setOpening(0); // closed
+                }
+
+                if (openingHoursObj.has(ServiceUtil.WEEKDAY_TEXT)) {
+
+                    JSONArray weekdayOpeningHours = openingHoursObj.getJSONArray(ServiceUtil.WEEKDAY_TEXT);
+
+                    ArrayList<String> weekdayHours = new ArrayList<>();
+
+                    for (int i = 0; i < weekdayOpeningHours.length(); i++) {
+                        weekdayHours.add(weekdayOpeningHours.getString(i));
+                    }
+                    placeDetail.setOpeningHours(weekdayHours);
                 }
             } else {
                 placeDetail.setOpening(1); // opening
@@ -179,7 +192,6 @@ public class PlaceDetailService extends IntentService {
                 count = 0;
             }
         }
-
         placeDetail.setLocality(locality);
     }
 }

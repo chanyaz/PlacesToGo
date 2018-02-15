@@ -7,18 +7,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.transition.TransitionInflater;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.dangkhoa.placestogo.DetailActivity;
 import com.example.dangkhoa.placestogo.R;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -97,12 +96,12 @@ public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.View
         PlaceDetail placeDetail = mList.get(position);
 
         if (placeDetail.getImage_url() != null && !placeDetail.getImage_url().equals("")) {
-            Picasso.with(mContext)
+            GlideApp.with(mContext)
                     .load(placeDetail.getImage_url())
                     .into(viewHolder.thumbnail);
         } else {
-            Picasso.with(mContext)
-                    .load(R.mipmap.ic_launcher)
+            GlideApp.with(mContext)
+                    .load(R.drawable.place_thumbnail)
                     .into(viewHolder.thumbnail);
         }
         viewHolder.resName.setText(placeDetail.getName());

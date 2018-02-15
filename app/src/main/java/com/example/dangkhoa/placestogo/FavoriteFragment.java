@@ -1,25 +1,42 @@
 package com.example.dangkhoa.placestogo;
 
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.LoaderManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.net.ConnectivityManager;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.dangkhoa.placestogo.RecyclerViewDecoration.FavoritePlaceItemSpacing;
+import com.example.dangkhoa.placestogo.Utils.FirebaseUtil;
+import com.example.dangkhoa.placestogo.Utils.NetworkUtil;
+import com.example.dangkhoa.placestogo.Utils.SQLiteUtil;
+import com.example.dangkhoa.placestogo.Utils.Util;
 import com.example.dangkhoa.placestogo.adapter.FavoritePlacesAdapter;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.example.dangkhoa.placestogo.database.DBContract;
@@ -29,6 +46,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by dangkhoa on 23/10/2017.
@@ -36,7 +56,11 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    public static final String LOAD_FIREBASE_KEY = "load once";
+    public static final int LOAD_FIREBASE_FIRST_TIME_LOGGED_IN = 100;
     private static final int LOAD_ID = 1;
+
+    private int loadFirebase;
 
     private FavoritePlacesAdapter adapter;
     private ViewHolder viewHolder;
@@ -45,15 +69,24 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
 
     private Paint paint;
 
+    //**** Firebase variables
     private FirebaseAuth mFirebaseAuth;
     private DatabaseReference mFavoritePlacesReference;
-    private ChildEventListener mChildEventListener;
+    private ChildEventListener mFavoriteEventListener;
+
+    private NetworkChangeReceiver networkChangeReceiver;
+
+    private SharedPreferences sharedPreferences;
+
+    private Context mContext;
 
     private class ViewHolder {
+        public SwipeRefreshLayout swipeRefreshLayout;
         public RecyclerView recyclerView;
 
         public ViewHolder(View view) {
             recyclerView = view.findViewById(R.id.favorite_recycler_view);
+            swipeRefreshLayout = view.findViewById(R.id.favoriteSwipeRefreshLayout);
         }
     }
 
@@ -63,11 +96,22 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
 
         paint = new Paint();
 
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        networkChangeReceiver = new NetworkChangeReceiver();
+        getContext().registerReceiver(networkChangeReceiver, intentFilter);
+
         mFirebaseAuth = FirebaseAuth.getInstance();
         // reference to user's favorite places in Firebase
-        mFavoritePlacesReference = FirebaseDatabase.getInstance().getReference().child(DetailFragment.FAVORITE_PLACES_CHILD);
+        mFavoritePlacesReference = FirebaseDatabase.getInstance().getReference()
+                .child(FirebaseUtil.USERS_CHILD)
+                .child(mFirebaseAuth.getCurrentUser().getUid())
+                .child(FirebaseUtil.FAVORITE_PLACES_CHILD);
 
-        attachFavoritePlacesListener();
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        loadFirebase = sharedPreferences.getInt(LOAD_FIREBASE_KEY, 0);
+
+        mContext = getContext();
     }
 
     @Nullable
@@ -86,9 +130,6 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
 
         viewHolder.recyclerView.setAdapter(adapter);
 
-        /*
-            Swipe item to delete
-         */
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
@@ -102,12 +143,12 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
                 getContext().getContentResolver().delete(DBContract.PlacesEntry.buildItemUri(id), null, null);
 
                 // restart loader when item is deleted
-                getLoaderManager().restartLoader(LOAD_ID, null, FavoriteFragment.this);
+                //getLoaderManager().restartLoader(LOAD_ID, null, FavoriteFragment.this);
 
                 // notify Firebase about deletion
                 // do not do this in listener because if user deletes the place when there is no internet connection, the sql database won't be notified
                 // and the loader cannot work properly
-                mFavoritePlacesReference.child(mFirebaseAuth.getCurrentUser().getUid()).child(id).removeValue();
+                mFavoritePlacesReference.child(id).removeValue();
             }
 
             @Override
@@ -143,48 +184,201 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
             }
         }).attachToRecyclerView(viewHolder.recyclerView);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            viewHolder.swipeRefreshLayout.setColorSchemeResources(R.color.blue, R.color.orange,
+                    R.color.green, R.color.red);
+        }
+        viewHolder.swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // do nothing
+                viewHolder.swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+
+        viewHolder.swipeRefreshLayout.setRefreshing(true);
+
+        if (loadFirebase == LOAD_FIREBASE_FIRST_TIME_LOGGED_IN) {
+            getFavoritePlacesFromFirebase();
+        } else {
+            viewHolder.swipeRefreshLayout.setRefreshing(false);
+        }
+        attachFavoritePlacesListener();
+
         return view;
     }
 
-    private void attachFavoritePlacesListener() {
-        if (mChildEventListener == null) {
-            mChildEventListener = new ChildEventListener() {
-                // this function should get called the first time the user logs in to load their favorite places from Firebase and store in sql database
+    private void getFavoritePlacesFromFirebase() {
+        if (NetworkUtil.checkInternetConnection(getContext())) {
+            mFavoritePlacesReference.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
-                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                    PlaceDetail placeDetail = dataSnapshot.getValue(PlaceDetail.class);
-                    // insert into sql local database
-                    getActivity().getContentResolver().insert(DBContract.PlacesEntry.CONTENT_URI, Util.valuesToDB(placeDetail));
-                }
+                public void onDataChange(DataSnapshot dataSnapshot) {
 
-                @Override
-                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                    if (dataSnapshot.getChildrenCount() == 0) {
+                        // set load firebase value to 0 --> Prevent this dialog from popping up when user launches this fragment the second, third, or nth time
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putInt(LOAD_FIREBASE_KEY, 0);
+                        editor.commit();
 
-                }
+                        viewHolder.swipeRefreshLayout.setRefreshing(false);
 
-                @Override
-                public void onChildRemoved(DataSnapshot dataSnapshot) {
+                        return;
+                    }
 
-                }
+                    for (DataSnapshot favChild : dataSnapshot.getChildren()) {
 
-                @Override
-                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                        final DatabaseReference placeRef = FirebaseDatabase.getInstance().getReference()
+                                .child(FirebaseUtil.PLACES_CHILD)
+                                .child(favChild.getKey())
+                                .child(FirebaseUtil.PLACE_DETAIL_CHILD);
 
+                        placeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                PlaceDetail placeDetail = dataSnapshot.getValue(PlaceDetail.class);
+                                // insert into SQLite Database
+                                mContext.getContentResolver().insert(DBContract.PlacesEntry.CONTENT_URI, SQLiteUtil.valuesToDB(placeDetail));
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+
+                        // set load firebase value to 0 --> Prevent this dialog from popping up when user launches this fragment the second, third, or nth time
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putInt(LOAD_FIREBASE_KEY, 0);
+                        editor.commit();
+
+                        viewHolder.swipeRefreshLayout.setRefreshing(false);
+                    }
                 }
 
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
 
                 }
-            };
-            mFavoritePlacesReference.child(mFirebaseAuth.getCurrentUser().getUid()).addChildEventListener(mChildEventListener);
+            });
+        } else {
+            viewHolder.swipeRefreshLayout.setRefreshing(false);
+
+            // if user first logs in and there is no internet connection when they first launch FavoriteActivity
+            // this alert dialog shows up to ask them whether they want to enable internet to load favorite places
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            builder.setMessage(getContext().getString(R.string.firebase_favorite_load_no_internet_connection))
+                    .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            NetworkUtil.setWifiState(getContext(), true);
+                            viewHolder.swipeRefreshLayout.setRefreshing(true);
+
+                            // set load firebase value to 0 --> Prevent this dialog from popping up when user launches this fragment the second, third, or nth time
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putInt(LOAD_FIREBASE_KEY, 0);
+                            editor.commit();
+                        }
+                    });
+
+            AlertDialog alertDialog = builder.create();
+            alertDialog.show();
         }
     }
 
+    /**
+     * Register for Child Event Listener: notify when a new place is added to favorite or a favorite place is removed
+     */
+    private void attachFavoritePlacesListener() {
+
+        if (mFavoriteEventListener == null) {
+
+            if (NetworkUtil.checkInternetConnection(getContext())) {
+                mFavoriteEventListener = new ChildEventListener() {
+                    // this function should get called the first time the user logs in to load their favorite places from Firebase and store in sql database
+                    @Override
+                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                        final DatabaseReference placeRef = FirebaseDatabase.getInstance().getReference()
+                                .child(FirebaseUtil.PLACES_CHILD)
+                                .child(dataSnapshot.getKey())
+                                .child(FirebaseUtil.PLACE_DETAIL_CHILD);
+
+                        placeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                PlaceDetail placeDetail = dataSnapshot.getValue(PlaceDetail.class);
+
+                                DatabaseQuery databaseQuery = new DatabaseQuery();
+
+                                try {
+                                    boolean isInDatabase = databaseQuery.execute(placeDetail.getId()).get();
+
+                                    if (!isInDatabase) {
+                                        // insert into SQLite Database
+                                        mContext.getContentResolver().insert(DBContract.PlacesEntry.CONTENT_URI, SQLiteUtil.valuesToDB(placeDetail));
+                                    }
+
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                } catch (ExecutionException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+
+                        viewHolder.swipeRefreshLayout.setRefreshing(false);
+                    }
+
+                    @Override
+                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                    }
+
+                    @Override
+                    public void onChildRemoved(DataSnapshot dataSnapshot) {
+                        // remove from sql local database
+                        mContext.getContentResolver().delete(DBContract.PlacesEntry.buildItemUri(dataSnapshot.getKey()), null, null);
+
+                        viewHolder.swipeRefreshLayout.setRefreshing(false);
+                    }
+
+                    @Override
+                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                };
+                mFavoritePlacesReference.addChildEventListener(mFavoriteEventListener);
+
+            } else {
+                viewHolder.swipeRefreshLayout.setRefreshing(false);
+            }
+        }
+    }
+
+    /**
+     * Unregister Child Event Listener
+     */
     private void detachFavoritePlacesListener() {
-        if (mChildEventListener != null) {
-            mFavoritePlacesReference.child(mFirebaseAuth.getCurrentUser().getUid()).removeEventListener(mChildEventListener);
-            mChildEventListener = null;
+        if (mFavoriteEventListener != null) {
+            mFavoritePlacesReference.removeEventListener(mFavoriteEventListener);
+            mFavoriteEventListener = null;
         }
     }
 
@@ -192,6 +386,12 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
     public void onPause() {
         super.onPause();
         detachFavoritePlacesListener();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getContext().unregisterReceiver(networkChangeReceiver);
     }
 
     @Override
@@ -213,5 +413,54 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         adapter.swapCursor(null);
+    }
+
+    public class NetworkChangeReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(final Context context, final Intent intent) {
+
+            int status = NetworkUtil.getConnectivityStatusString(context);
+
+            if (status == NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
+
+            } else {
+                if (loadFirebase == LOAD_FIREBASE_FIRST_TIME_LOGGED_IN) {
+                    getFavoritePlacesFromFirebase();
+                }
+                attachFavoritePlacesListener();
+            }
+        }
+    }
+
+    /*
+        This AsyncTask class will query database in the background to check whether the current place is in database
+     */
+    private class DatabaseQuery extends AsyncTask<String, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(String... placeID) {
+
+            Cursor cursor = null;
+
+            try {
+                cursor = getContext().getContentResolver().query(
+                        DBContract.PlacesEntry.buildItemUri(placeID[0]),
+                        null,
+                        null,
+                        null,
+                        null);
+
+            } catch (Exception e) {
+
+            } finally {
+                cursor.close();
+            }
+
+            if (cursor.getCount() == 1) {
+                return true;
+            }
+            return false;
+        }
     }
 }

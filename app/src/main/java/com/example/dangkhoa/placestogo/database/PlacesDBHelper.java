@@ -36,6 +36,7 @@ public class PlacesDBHelper extends SQLiteOpenHelper {
                 + DBContract.PlacesEntry.COLUMN_POSTCODE + " text, "
                 + DBContract.PlacesEntry.COLUMN_WEBSITE + " text, "
                 + DBContract.PlacesEntry.COLUMN_PHONE + " text, "
+                + DBContract.PlacesEntry.COLUMN_OPENING_HOURS + " text, "
                 + "constraint " + DBContract.PlacesEntry.COLUMN_PLACE_ID + " primary key (" + DBContract.PlacesEntry.COLUMN_PLACE_ID + ")"
                 + "on conflict replace );";
 

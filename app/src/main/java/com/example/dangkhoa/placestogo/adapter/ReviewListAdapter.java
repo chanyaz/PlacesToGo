@@ -1,26 +1,17 @@
 package com.example.dangkhoa.placestogo.adapter;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.dangkhoa.placestogo.R;
-import com.example.dangkhoa.placestogo.Util;
-import com.example.dangkhoa.placestogo.data.PlaceDetail;
+import com.example.dangkhoa.placestogo.Utils.Util;
 import com.example.dangkhoa.placestogo.data.Review;
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -69,26 +60,15 @@ public class ReviewListAdapter extends RecyclerView.Adapter<ReviewListAdapter.Vi
         String profile_image_url = review.getProfile_image_url();
 
         if (profile_image_url != null && !profile_image_url.equals("")) {
-            Picasso.with(mContext)
+            GlideApp.with(mContext)
                     .load(profile_image_url)
-                    .into(viewHolder.user_image, new Callback() {
-                        @Override
-                        public void onSuccess() {
-                            Bitmap bitmap = ((BitmapDrawable) viewHolder.user_image.getDrawable()).getBitmap();
-                            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(mContext.getResources(), bitmap);
-                            roundedBitmapDrawable.setCircular(true);
-                            roundedBitmapDrawable.setCornerRadius(Math.max(bitmap.getWidth(), bitmap.getHeight()) / 2.0f);
-                            viewHolder.user_image.setImageDrawable(roundedBitmapDrawable);
-                        }
+                    .circleCrop()
+                    .into(viewHolder.user_image);
 
-                        @Override
-                        public void onError() {
-                            viewHolder.user_image.setImageResource(R.mipmap.ic_launcher);
-                        }
-                    });
         } else {
-            Picasso.with(mContext)
+            GlideApp.with(mContext)
                     .load(R.mipmap.ic_launcher)
+                    .centerCrop()
                     .into(viewHolder.user_image);
         }
 

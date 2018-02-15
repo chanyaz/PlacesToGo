@@ -3,8 +3,11 @@ package com.example.dangkhoa.placestogo;
 import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -13,11 +16,21 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
+import com.example.dangkhoa.placestogo.Utils.FirebaseUtil;
+import com.example.dangkhoa.placestogo.Utils.Util;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 
@@ -29,17 +42,40 @@ public class PlaceListActivity extends AppCompatActivity implements NavigationVi
     private ArrayList<PlaceDetail> mList;
     private float mRadius;
 
-    private static final String PLACE_LIST_FRAGMENT_TAG = "place_list_fragment_tag";
+    private static final int RC_PHOTO_PICKER = 200;
 
+    private static final String PHOTO_PICKER_TITLE = "Complete action using";
+    private static final String PLACE_LIST_FRAGMENT_TAG = "place_list_fragment_tag";
     private static final String PLACE_LOCATION_SAVE_KEY = "place_location_save_key";
     private static final String PLACE_TYPE_SAVE_KEY = "place_type_save_key";
-
     private static final String MAP_FRAGMENT_TAG = "map_fragment_tag";
 
-    public DrawerLayout drawerLayout;
-    public NavigationView navigationView;
     public ActionBarDrawerToggle toggle;
-    public Toolbar toolbar;
+
+    private FirebaseAuth mFirebaseAuth;
+
+    private ViewHolder viewHolder;
+
+    private class ViewHolder {
+
+        public DrawerLayout drawerLayout;
+        public NavigationView navigationView;
+        public Toolbar toolbar;
+        public TextView usernameTextView, emailTextView;
+        public ImageView cameraButton, headerImage;
+
+        public ViewHolder() {
+            toolbar = findViewById(R.id.place_activity_toolbar);
+            drawerLayout = findViewById(R.id.drawer_layout);
+            navigationView = findViewById(R.id.nav_view);
+
+            View headerView = navigationView.getHeaderView(0);
+            usernameTextView = headerView.findViewById(R.id.usernameTextView);
+            emailTextView = headerView.findViewById(R.id.emailTextView);
+            headerImage = headerView.findViewById(R.id.nav_imageView);
+            cameraButton = headerView.findViewById(R.id.nav_CameraButton);
+        }
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -53,21 +89,33 @@ public class PlaceListActivity extends AppCompatActivity implements NavigationVi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_place_list);
 
-        toolbar = findViewById(R.id.place_activity_toolbar);
-        drawerLayout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.nav_view);
+        viewHolder = new ViewHolder();
 
-        setSupportActionBar(toolbar);
+        setSupportActionBar(viewHolder.toolbar);
 
-        toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout.addDrawerListener(toggle);
+        toggle = new ActionBarDrawerToggle(this, viewHolder.drawerLayout, viewHolder.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        viewHolder.drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        navigationView.setNavigationItemSelectedListener(this);
+        viewHolder.navigationView.setNavigationItemSelectedListener(this);
 
         Intent intent = getIntent();
         mLastLocation = intent.getParcelableExtra(MainFragment.CURRENT_LOCATION_KEY);
         mPlaceType = intent.getStringExtra(MainFragment.PLACE_TYPE_KEY);
+
+        mFirebaseAuth = FirebaseAuth.getInstance();
+
+        viewHolder.usernameTextView.setText(mFirebaseAuth.getCurrentUser().getDisplayName());
+        viewHolder.emailTextView.setText(mFirebaseAuth.getCurrentUser().getEmail());
+
+        FirebaseUtil.setProfilePicture(getApplicationContext(), mFirebaseAuth, viewHolder.headerImage);
+
+        viewHolder.cameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openOptionsDialog();
+            }
+        });
 
         if (savedInstanceState == null) {
 
@@ -86,6 +134,41 @@ public class PlaceListActivity extends AppCompatActivity implements NavigationVi
             mPlaceType = savedInstanceState.getString(PLACE_TYPE_SAVE_KEY);
         }
         getSupportActionBar().setTitle(Util.placeTypeFromValueToLabel(mPlaceType));
+    }
+
+    private void openOptionsDialog() {
+        View view = LayoutInflater.from(this).inflate(R.layout.options_dialog, null);
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setView(view);
+
+        final android.app.AlertDialog dialog = builder.create();
+        dialog.getWindow().getAttributes().windowAnimations = R.style.DialogSlide;
+        dialog.show();
+
+        LinearLayout selectPictureLayout = dialog.findViewById(R.id.select_picture_layout);
+        LinearLayout takePictureLayout = dialog.findViewById(R.id.take_new_picture_layout);
+
+        selectPictureLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openPhotoPicker();
+                dialog.dismiss();
+            }
+        });
+
+        takePictureLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+    }
+
+    private void openPhotoPicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        startActivityForResult(Intent.createChooser(intent, PHOTO_PICKER_TITLE), RC_PHOTO_PICKER);
     }
 
     @Override
@@ -143,8 +226,8 @@ public class PlaceListActivity extends AppCompatActivity implements NavigationVi
 
     @Override
     public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
+        if (viewHolder.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            viewHolder.drawerLayout.closeDrawer(GravityCompat.START);
         } else {
             MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentByTag(MAP_FRAGMENT_TAG);
             PlaceListFragment placeListFragment = (PlaceListFragment) getFragmentManager().findFragmentByTag(PLACE_LIST_FRAGMENT_TAG);
@@ -171,28 +254,36 @@ public class PlaceListActivity extends AppCompatActivity implements NavigationVi
                 Intent intent = new Intent(this, FavoriteActivity.class);
                 startActivity(intent);
                 break;
+
             case R.id.menu_settings:
                 // open setting activity
                 Intent settingsIntent = new Intent(this, SettingsActivity.class);
                 startActivity(settingsIntent);
                 break;
+
             case R.id.menu_maps:
                 // open google maps
                 break;
+
             case R.id.menu_share:
                 String message = this.getResources().getString(R.string.app_share);
                 Util.shareIntent(this, message);
                 break;
+
             case R.id.menu_account:
                 break;
+
             case R.id.menu_signout:
-                Util.signOut(this);
+                FirebaseUtil.signOut(this);
+
+                // navigate back to MainActivity to handle signing out
                 Intent mainIntent = new Intent(this, MainActivity.class);
                 startActivity(mainIntent);
+
                 finish();
                 break;
         }
-        drawerLayout.closeDrawer(GravityCompat.START);
+        viewHolder.drawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
@@ -204,5 +295,16 @@ public class PlaceListActivity extends AppCompatActivity implements NavigationVi
     @Override
     public void placesListAchieved(ArrayList<PlaceDetail> list) {
         mList = list;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
+            Uri selectedImage = data.getData();
+
+            FirebaseUtil.uploadProfilePicture(getApplicationContext(), mFirebaseAuth, selectedImage, viewHolder.headerImage);
+        }
     }
 }

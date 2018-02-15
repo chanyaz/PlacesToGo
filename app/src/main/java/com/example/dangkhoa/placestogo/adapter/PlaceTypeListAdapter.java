@@ -3,7 +3,6 @@ package com.example.dangkhoa.placestogo.adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
-import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,14 +10,11 @@ import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.example.dangkhoa.placestogo.DetailActivity;
-import com.example.dangkhoa.placestogo.MainActivity;
 import com.example.dangkhoa.placestogo.MainFragment;
 import com.example.dangkhoa.placestogo.PlaceListActivity;
 import com.example.dangkhoa.placestogo.R;
-import com.example.dangkhoa.placestogo.Util;
+import com.example.dangkhoa.placestogo.Utils.Util;
 
 import java.util.ArrayList;
 

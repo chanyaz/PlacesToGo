@@ -36,6 +36,7 @@ public class DBContract {
         public static final String COLUMN_POSTCODE = "place_post_code";
         public static final String COLUMN_WEBSITE = "place_website";
         public static final String COLUMN_PHONE = "place_phone";
+        public static final String COLUMN_OPENING_HOURS = "opening_hours";
 
         public static Uri buildItemUri(String _id) {
             return BASE_CONTENT_URI.buildUpon().appendPath(PATH_PLACES).appendPath(_id).build();
