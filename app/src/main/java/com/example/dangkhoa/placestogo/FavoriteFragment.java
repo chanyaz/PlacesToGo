@@ -315,20 +315,16 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 PlaceDetail placeDetail = dataSnapshot.getValue(PlaceDetail.class);
 
-                                DatabaseQuery databaseQuery = new DatabaseQuery();
+                                Cursor cursor = mContext.getContentResolver().query(
+                                        DBContract.PlacesEntry.buildItemUri(placeDetail.getId()),
+                                        null,
+                                        null,
+                                        null,
+                                        null);
 
-                                try {
-                                    boolean isInDatabase = databaseQuery.execute(placeDetail.getId()).get();
-
-                                    if (!isInDatabase) {
-                                        // insert into SQLite Database
-                                        mContext.getContentResolver().insert(DBContract.PlacesEntry.CONTENT_URI, SQLiteUtil.valuesToDB(placeDetail));
-                                    }
-
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                } catch (ExecutionException e) {
-                                    e.printStackTrace();
+                                if (cursor.getCount() == 0) {
+                                    // insert into SQLite Database
+                                    mContext.getContentResolver().insert(DBContract.PlacesEntry.CONTENT_URI, SQLiteUtil.valuesToDB(placeDetail));
                                 }
                             }
 
@@ -430,37 +426,6 @@ public class FavoriteFragment extends Fragment implements LoaderManager.LoaderCa
                 }
                 attachFavoritePlacesListener();
             }
-        }
-    }
-
-    /*
-        This AsyncTask class will query database in the background to check whether the current place is in database
-     */
-    private class DatabaseQuery extends AsyncTask<String, Void, Boolean> {
-
-        @Override
-        protected Boolean doInBackground(String... placeID) {
-
-            Cursor cursor = null;
-
-            try {
-                cursor = getContext().getContentResolver().query(
-                        DBContract.PlacesEntry.buildItemUri(placeID[0]),
-                        null,
-                        null,
-                        null,
-                        null);
-
-            } catch (Exception e) {
-
-            } finally {
-                cursor.close();
-            }
-
-            if (cursor.getCount() == 1) {
-                return true;
-            }
-            return false;
         }
     }
 }

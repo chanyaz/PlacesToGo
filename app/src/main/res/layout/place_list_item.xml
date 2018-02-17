@@ -18,7 +18,6 @@
             android:layout_height="0dp"
             android:layout_weight="1.3"
             android:contentDescription=""
-            android:scaleType="centerCrop"
             android:transitionName="@string/transition_thumbnail" />
 
         <LinearLayout

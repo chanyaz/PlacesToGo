@@ -325,25 +325,14 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onDestroy() {
+        super.onDestroy();
         if (mGoogleApiClient != null) {
             if (mGoogleApiClient.isConnected()) {
                 // Disconnect the client
                 mGoogleApiClient.disconnect();
             }
         }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
         getContext().unregisterReceiver(addressReceiver);
         getContext().unregisterReceiver(networkChangeReceiver);
         stopLocationUpdate();

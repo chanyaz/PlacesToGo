@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.load.resource.bitmap.FitCenter;
 import com.example.dangkhoa.placestogo.DetailActivity;
 import com.example.dangkhoa.placestogo.R;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
@@ -98,10 +99,12 @@ public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.View
         if (placeDetail.getImage_url() != null && !placeDetail.getImage_url().equals("")) {
             GlideApp.with(mContext)
                     .load(placeDetail.getImage_url())
+                    .centerCrop()
                     .into(viewHolder.thumbnail);
         } else {
             GlideApp.with(mContext)
-                    .load(R.drawable.place_thumbnail)
+                    .load(R.mipmap.ic_launcher)
+                    .fitCenter()
                     .into(viewHolder.thumbnail);
         }
         viewHolder.resName.setText(placeDetail.getName());

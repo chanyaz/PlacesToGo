@@ -217,7 +217,7 @@ public class Util {
      *
      * @return
      */
-    private static final String DATE_FORMAT = "EEE MMM dd hh:mm:ss yyyy";
+    private static final String DATE_FORMAT = "EEE MMM dd HH:mm:ss yyyy"; // 24 hours
 
     public static String getCurrentTime() {
         Date currentTime = Calendar.getInstance().getTime();

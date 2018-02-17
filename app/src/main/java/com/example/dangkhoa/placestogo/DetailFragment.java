@@ -18,6 +18,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,9 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.FitCenter;
 import com.example.dangkhoa.placestogo.Utils.FirebaseUtil;
 import com.example.dangkhoa.placestogo.Utils.NetworkUtil;
 import com.example.dangkhoa.placestogo.Utils.SQLiteUtil;
@@ -567,8 +571,9 @@ public class DetailFragment extends Fragment {
                 viewHolder.openinghoursText.setVisibility(View.VISIBLE);
             }
 
-            //FirebaseUtil.getUserReviews(mFireBaseAuth.getCurrentUser().getUid(), mPlaceDetail.getId(), list);
             populateReviewList(list);
+            // add this here to prevent duplicating
+            attachReviewsListener();
         }
     }
 
@@ -590,9 +595,6 @@ public class DetailFragment extends Fragment {
         mAdapter.notifyItemRangeInserted(0, list.size());
 
         viewHolder.progressBar.setVisibility(View.GONE);
-
-        // add this here to prevent duplicating
-        attachReviewsListener();
     }
 
     private void updateUI() {
@@ -615,22 +617,18 @@ public class DetailFragment extends Fragment {
         if (mPlaceDetail.getImage_url() != null && !mPlaceDetail.getImage_url().equals("")) {
             GlideApp.with(getContext())
                     .load(mPlaceDetail.getImage_url())
-                    .error(R.drawable.place_thumbnail)
                     .into(viewHolder.thumbnailImage);
 
             GlideApp.with(getContext())
                     .load(mPlaceDetail.getImage_url())
-                    .error(R.drawable.place_banner)
                     .into(viewHolder.backdropImage);
         } else {
             GlideApp.with(getContext())
-                    .load(R.drawable.place_thumbnail)
-                    .fitCenter()
+                    .load(R.mipmap.ic_launcher)
                     .into(viewHolder.thumbnailImage);
 
             GlideApp.with(getContext())
-                    .load(R.drawable.place_banner)
-                    .fitCenter()
+                    .load(R.drawable.place_thumbnail)
                     .into(viewHolder.backdropImage);
         }
         viewHolder.ratingBar.setRating((float) mPlaceDetail.getRating());

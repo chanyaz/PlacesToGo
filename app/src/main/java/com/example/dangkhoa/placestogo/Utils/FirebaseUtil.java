@@ -2,7 +2,6 @@ package com.example.dangkhoa.placestogo.Utils;
 
 import android.content.Context;
 import android.net.Uri;
-import android.util.Log;
 import android.widget.ImageView;
 
 import com.example.dangkhoa.placestogo.adapter.GlideApp;
@@ -169,14 +168,14 @@ public class FirebaseUtil {
                 .child(placeDetail.getId());
 
         // store google reviews
-        for (int i = 0; i < placeDetail.getReviews().size(); i++) {
+        /*for (int i = 0; i < placeDetail.getReviews().size(); i++) {
             String id = GOOGLE_USER_REVIEW_ID + i;
 
             placeRef.child(REVIEWS_CHILD)
                     .child(GOOGLE_REVIEWS_CHILD)
                     .child(id)
                     .setValue(placeDetail.getReviews().get(i));
-        }
+        }*/
 
         ArrayList<Review> backupList = placeDetail.getReviews();
 
