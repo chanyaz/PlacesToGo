@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.transition.TransitionInflater;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +14,6 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
-import com.bumptech.glide.load.resource.bitmap.FitCenter;
 import com.example.dangkhoa.placestogo.DetailActivity;
 import com.example.dangkhoa.placestogo.R;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
@@ -86,7 +84,7 @@ public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.View
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
 
-        View view = inflater.inflate(R.layout.place_list_item, parent, false);
+        View view = inflater.inflate(R.layout.list_item_place, parent, false);
         ViewHolder viewHolder = new ViewHolder(view);
 
         return viewHolder;

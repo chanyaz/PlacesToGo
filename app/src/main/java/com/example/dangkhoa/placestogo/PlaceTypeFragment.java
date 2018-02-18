@@ -60,7 +60,7 @@ public class PlaceTypeFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_place_type_list, container, false);
+        View view = inflater.inflate(R.layout.list_fragment_place_type, container, false);
 
         viewHolder = new ViewHolder(view);
 

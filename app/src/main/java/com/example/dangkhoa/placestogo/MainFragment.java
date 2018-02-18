@@ -1,5 +1,6 @@
 package com.example.dangkhoa.placestogo;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -27,16 +29,17 @@ import android.widget.Toast;
 import com.example.dangkhoa.placestogo.Utils.NetworkUtil;
 import com.example.dangkhoa.placestogo.Utils.Util;
 import com.example.dangkhoa.placestogo.service.AddressLookupService;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
-public class MainFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener,
-        ActivityCompat.OnRequestPermissionsResultCallback {
+public class MainFragment extends Fragment implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-    private static final String LOG_TAG = "MAIN_FRAGMENT";
+    private Context mContext;
 
     private class ViewHolder {
 
@@ -67,13 +70,14 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         }
     }
 
-    private static final int REQUEST_LOCATION = 100;
-
     private ViewHolder viewHolder;
 
-    private GoogleApiClient mGoogleApiClient;
+    private FusedLocationProviderClient mFusedLocationProviderClient;
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
+    private LocationCallback mLocationCallback;
+
+    private boolean mRequestingLocationUpdate;
 
     private String mLastAddress;
     private String mLastErrorMessage;
@@ -102,6 +106,7 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        // save last location, last address and the boolean variable to check for re-request when reconnected
         outState.putBoolean(REQUEST_SERVICE_ON_NETWORK_RECONNECTED, requestLocationOnNetworkReconnected);
         outState.putString(LAST_ADDRESS_SAVE_KEY, mLastAddress);
         outState.putParcelable(LAST_LOCATION_SAVE_KEY, mLastLocation);
@@ -115,24 +120,12 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         // prevent keyboard from showing up when user not click on the search area
         ((AppCompatActivity) getContext()).getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 
-        if (savedInstanceState != null) {
-            requestLocationOnNetworkReconnected = savedInstanceState.getBoolean(REQUEST_SERVICE_ON_NETWORK_RECONNECTED);
-            mLastAddress = savedInstanceState.getString(LAST_ADDRESS_SAVE_KEY);
-            mLastLocation = savedInstanceState.getParcelable(LAST_LOCATION_SAVE_KEY);
-        } else {
-            mLastAddress = null;
-            mLastLocation = null;
-            mLastErrorMessage = null;
-            requestLocationOnNetworkReconnected = false;
-        }
-    }
+        mContext = getContext();
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_main, container, false);
-
-        viewHolder = new ViewHolder(view);
+        // initialise FusedLocationProvider
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        createLocationCallback();
+        createLocationRequest();
 
         // register for Address Receiver Service
         IntentFilter intentFilterAddress = new IntentFilter(AddressLookupServiceReceiver.ADDRESS_RECEIVER);
@@ -145,6 +138,26 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         intentFilterNetwork.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         networkChangeReceiver = new NetworkChangeReceiver();
         getContext().registerReceiver(networkChangeReceiver, intentFilterNetwork);
+
+        if (savedInstanceState != null) {
+            requestLocationOnNetworkReconnected = savedInstanceState.getBoolean(REQUEST_SERVICE_ON_NETWORK_RECONNECTED);
+            mLastAddress = savedInstanceState.getString(LAST_ADDRESS_SAVE_KEY);
+            mLastLocation = savedInstanceState.getParcelable(LAST_LOCATION_SAVE_KEY);
+
+        } else {
+            mLastLocation = null;
+            mLastAddress = null;
+            mLastErrorMessage = null;
+            requestLocationOnNetworkReconnected = false;
+        }
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_main, container, false);
+
+        viewHolder = new ViewHolder(view);
 
         viewHolder.locationButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -206,13 +219,31 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
             }
         });
 
-        if (mLastAddress == null) {
-            buildGoogleApiClient();
+        return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (mLastLocation == null) {
+            startLocationUpdate();
         } else {
             updateUI();
         }
+    }
 
-        return view;
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopLocationUpdate();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getContext().unregisterReceiver(addressReceiver);
+        getContext().unregisterReceiver(networkChangeReceiver);
     }
 
     private void startPlaceListActivity() {
@@ -220,10 +251,10 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         // therefore, when place list activity starts, app crashes due to null location
         if (mLastLocation == null) {
             Toast.makeText(getContext(), getResources().getString(R.string.location_unavailable), Toast.LENGTH_SHORT).show();
-            // after informing users, we should start getting location again so that users don't need to do this themselves
-            if (mGoogleApiClient != null) {
-                startLocationUpdate();
-            }
+
+            // after announcing user that their location is unknown, try getting their location again
+            startLocationUpdate();
+
         } else {
             Intent intent = new Intent(getContext(), PlaceListActivity.class);
             intent.putExtra(PLACE_TYPE_KEY, mPlaceType);
@@ -232,81 +263,86 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         }
     }
 
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(getContext())
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-    }
-
+    /**
+     * Set priority for location detection to high accuracy
+     */
     private void createLocationRequest() {
         mLocationRequest = new LocationRequest();
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-    private void stopLocationUpdate() {
-        if (mGoogleApiClient != null) {
-            try {
-                LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-            } catch (IllegalStateException e) {
+    /**
+     * LocationCallback gets the lcoation when the location update finishes
+     */
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
 
+                mLastLocation = locationResult.getLastLocation();
+                mRequestingLocationUpdate = false;
+
+                startAddressLookupService();
             }
-        }
+        };
     }
 
+    /**
+     * Remove location callback
+     */
+    private void stopLocationUpdate() {
+        // if location is not being requested, do no need to remove it
+        if (!mRequestingLocationUpdate) {
+            return;
+        }
+        mFusedLocationProviderClient.removeLocationUpdates(mLocationCallback)
+                .addOnCompleteListener(getActivity(), new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+
+                        mRequestingLocationUpdate = false;
+                    }
+                });
+    }
+
+    /**
+     * Start location update
+     */
     private void startLocationUpdate() {
+
+        // check for permission
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             requestPermission();
 
         } else {
-            if (!NetworkUtil.checkInternetConnection(getContext()) && !requestLocationOnNetworkReconnected) {
+            // if location is not being requested, request it
+            if (!mRequestingLocationUpdate) {
 
-                android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
-                builder.setMessage(getContext().getString(R.string.location_load_no_internet_connection))
-                        .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                // set this variable to true so that when user turns on internet MANUALLY, location will be automatically detected
-                                requestLocationOnNetworkReconnected = true;
-                                dialogInterface.dismiss();
-                            }
-                        })
-                        .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                // turn on wifi
-                                NetworkUtil.setWifiState(getContext(), true);
-                                requestLocationOnNetworkReconnected = true;
-
-                                viewHolder.userLocationTextView.setText(getString(R.string.detecting_location));
-                            }
-                        });
-
-                android.app.AlertDialog alertDialog = builder.create();
-                alertDialog.show();
-            } else {
                 viewHolder.userLocationTextView.setText(getString(R.string.detecting_location));
+                mRequestingLocationUpdate = true;
 
-                if (mGoogleApiClient != null) {
-                    createLocationRequest();
-                    LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-                } else {
-                    buildGoogleApiClient();
-                }
+                mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest,
+                        mLocationCallback, Looper.myLooper());
             }
         }
     }
 
+    /**
+     * Fetch address look up service when we already have the location
+     */
     private void startAddressLookupService() {
-        Intent intent = new Intent(getContext(), AddressLookupService.class);
+        Intent intent = new Intent(mContext, AddressLookupService.class);
         intent.putExtra(AddressLookupService.CURRENT_LOCATION, mLastLocation);
-        getContext().startService(intent);
+        mContext.startService(intent);
     }
 
+    /**
+     * Update address text
+     */
     private void updateUI() {
         if (mLastErrorMessage == null) {
             viewHolder.userLocationTextView.setText(mLastAddress);
@@ -315,55 +351,11 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        // Connect the client
-        if (mLastAddress == null) {
-            mGoogleApiClient.connect();
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mGoogleApiClient != null) {
-            if (mGoogleApiClient.isConnected()) {
-                // Disconnect the client
-                mGoogleApiClient.disconnect();
-            }
-        }
-        getContext().unregisterReceiver(addressReceiver);
-        getContext().unregisterReceiver(networkChangeReceiver);
-        stopLocationUpdate();
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        // Make sure location request is not called when the app is resumed
-        if (mLastLocation == null) {
-            startLocationUpdate();
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Toast.makeText(getContext(), getResources().getString(R.string.connection_suspended), Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Toast.makeText(getContext(), getResources().getString(R.string.connection_failed), Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        if (location != null) {
-            mLastLocation = location;
-            startAddressLookupService();
-        }
-    }
-
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    private static final int REQUEST_LOCATION = 100;
+    /**
+     * Request for location permission
+     */
     private void requestPermission() {
         if (shouldShowRequestPermissionRationale(android.Manifest.permission.ACCESS_FINE_LOCATION)) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -380,7 +372,7 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
             AlertDialog alertDialog = builder.create();
             alertDialog.show();
         } else {
-            ActivityCompat.requestPermissions(getActivity(),
+            ActivityCompat.requestPermissions((Activity) mContext,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION},
                     REQUEST_LOCATION);
         }
@@ -392,17 +384,21 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
         switch (requestCode) {
             case REQUEST_LOCATION: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
                     Toast.makeText(getContext(), getResources().getString(R.string.location_permission_granted), Toast.LENGTH_SHORT).show();
                     startLocationUpdate();
+
                 } else {
                     Toast.makeText(getContext(), getResources().getString(R.string.location_permission_not_granted), Toast.LENGTH_SHORT).show();
                 }
+
                 break;
             }
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     public class AddressLookupServiceReceiver extends BroadcastReceiver {
         public static final String ADDRESS_RECEIVER = "com.example.android.placestogo.address";
@@ -430,13 +426,7 @@ public class MainFragment extends Fragment implements GoogleApiClient.Connection
 
             } else {
                 if (requestLocationOnNetworkReconnected) {
-
-                    if (mGoogleApiClient != null) {
-                        startLocationUpdate();
-                    } else {
-                        buildGoogleApiClient();
-                    }
-
+                    startLocationUpdate();
                 }
             }
         }

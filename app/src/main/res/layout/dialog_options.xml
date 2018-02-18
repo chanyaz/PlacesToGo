@@ -2,38 +2,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/round_corner_background"
     android:orientation="vertical"
+    android:padding="6dp"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="?actionBarSize"
-        android:layout_marginBottom="10dp"
-        android:background="@color/colorPrimary">
-
-        <TextView
-            style="@style/TextAppearance.AppCompat.Title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="15dp"
-            android:text="@string/new_profile_picture"
-            android:textColor="@color/white" />
-
-    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/select_picture_layout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginBottom="10dp"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:background="@drawable/main_place_type_touch_selector"
+        android:padding="12dp">
 
         <ImageView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:src="@mipmap/ic_launcher" />
+            android:src="@drawable/ic_image_gallery_selector" />
 
         <RelativeLayout
             android:layout_width="0dp"
@@ -54,15 +39,15 @@
     <LinearLayout
         android:id="@+id/take_new_picture_layout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginBottom="10dp"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:background="@drawable/main_place_type_touch_selector"
+        android:padding="12dp">
 
         <ImageView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:src="@mipmap/ic_launcher" />
+            android:src="@drawable/ic_take_picture_selector" />
 
         <RelativeLayout
             android:layout_width="0dp"

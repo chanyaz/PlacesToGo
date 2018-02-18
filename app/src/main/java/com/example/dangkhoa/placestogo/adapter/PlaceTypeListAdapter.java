@@ -42,7 +42,7 @@ public class PlaceTypeListAdapter extends RecyclerView.Adapter<PlaceTypeListAdap
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
 
-        View view = inflater.inflate(R.layout.place_type_list_item, parent, false);
+        View view = inflater.inflate(R.layout.list_item_place_type, parent, false);
         ViewHolder viewHolder = new ViewHolder(view);
 
         return viewHolder;

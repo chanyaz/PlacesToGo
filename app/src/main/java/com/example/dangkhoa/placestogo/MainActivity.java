@@ -1,14 +1,15 @@
 package com.example.dangkhoa.placestogo;
 
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -23,8 +24,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -35,15 +34,8 @@ import com.example.dangkhoa.placestogo.Utils.Util;
 import com.example.dangkhoa.placestogo.adapter.GlideApp;
 import com.example.dangkhoa.placestogo.adapter.GooglePlacesAutoCompleteAdapter;
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 import java.util.Arrays;
 
@@ -71,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public ImageView cameraButton, headerImage;
 
         public ListView searchListView;
+
+        public SearchView searchView;
 
         public ViewHolder() {
             toolbar = findViewById(R.id.main_toolbar);
@@ -164,9 +158,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         getMenuInflater().inflate(R.menu.menu_search_main_activity, menu);
 
         MenuItem menuItem = menu.findItem(R.id.searchMainActivity);
-        SearchView searchView = (SearchView) menuItem.getActionView();
+        viewHolder.searchView = (SearchView) menuItem.getActionView();
 
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        viewHolder.searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 return false;
@@ -224,12 +218,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void openOptionsDialog() {
-        View view = LayoutInflater.from(this).inflate(R.layout.options_dialog, null);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_options, null);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(view);
 
         final AlertDialog dialog = builder.create();
         dialog.getWindow().getAttributes().windowAnimations = R.style.DialogSlide;
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.show();
 
         LinearLayout selectPictureLayout = dialog.findViewById(R.id.select_picture_layout);
@@ -324,11 +319,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             PlaceTypeFragment prevPlaceType = (PlaceTypeFragment) getFragmentManager().findFragmentByTag(PLACE_TYPE_FRAGMENT_TAG);
 
             if (prevPlaceType != null && !prevMain.isVisible()) {
+
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
 
                 ft.remove(prevPlaceType);
                 ft.show(prevMain);
                 ft.commit();
+
             } else {
                 super.onBackPressed();
             }

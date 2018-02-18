@@ -18,7 +18,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,9 +30,6 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.bitmap.CenterCrop;
-import com.bumptech.glide.load.resource.bitmap.FitCenter;
 import com.example.dangkhoa.placestogo.Utils.FirebaseUtil;
 import com.example.dangkhoa.placestogo.Utils.NetworkUtil;
 import com.example.dangkhoa.placestogo.Utils.SQLiteUtil;
@@ -183,7 +179,7 @@ public class DetailFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.detail_fragment, container, false);
+        View view = inflater.inflate(R.layout.fragment_detail, container, false);
 
         viewHolder = new ViewHolder(view);
 
@@ -308,7 +304,7 @@ public class DetailFragment extends Fragment {
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
 
-                View reviewDialogView = LayoutInflater.from(getContext()).inflate(R.layout.opening_hours_dialog, null);
+                View reviewDialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_opening_hours, null);
 
                 builder.setView(reviewDialogView);
 
@@ -338,7 +334,7 @@ public class DetailFragment extends Fragment {
             public void onClick(View view) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
 
-                View reviewDialogView = LayoutInflater.from(getContext()).inflate(R.layout.review_dialog, null);
+                View reviewDialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_review, null);
 
                 builder.setView(reviewDialogView);
 

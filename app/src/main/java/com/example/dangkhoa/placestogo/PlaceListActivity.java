@@ -3,11 +3,11 @@ package com.example.dangkhoa.placestogo;
 import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -29,8 +29,6 @@ import com.example.dangkhoa.placestogo.Utils.Util;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 
@@ -137,12 +135,13 @@ public class PlaceListActivity extends AppCompatActivity implements NavigationVi
     }
 
     private void openOptionsDialog() {
-        View view = LayoutInflater.from(this).inflate(R.layout.options_dialog, null);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_options, null);
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setView(view);
 
         final android.app.AlertDialog dialog = builder.create();
         dialog.getWindow().getAttributes().windowAnimations = R.style.DialogSlide;
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.show();
 
         LinearLayout selectPictureLayout = dialog.findViewById(R.id.select_picture_layout);

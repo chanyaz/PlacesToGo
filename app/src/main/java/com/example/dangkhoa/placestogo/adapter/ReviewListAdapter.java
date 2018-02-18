@@ -2,6 +2,7 @@ package com.example.dangkhoa.placestogo.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +35,7 @@ public class ReviewListAdapter extends RecyclerView.Adapter<ReviewListAdapter.Vi
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
 
-        View view = inflater.inflate(R.layout.review_list_item, parent, false);
+        View view = inflater.inflate(R.layout.list_item_review, parent, false);
         ViewHolder viewHolder = new ViewHolder(view);
 
         return viewHolder;

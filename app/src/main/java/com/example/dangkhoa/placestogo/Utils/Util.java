@@ -223,7 +223,24 @@ public class Util {
         Date currentTime = Calendar.getInstance().getTime();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT);
 
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(currentTime);
+        calendar.get(Calendar.DAY_OF_WEEK);
+
         return simpleDateFormat.format(currentTime);
+    }
+
+    /**
+     * Get day of week
+     * @return an integer (1: Sunday, 2: Monday, 3:...)
+     */
+    public static int getDayOfWeek() {
+        Date currentTime = Calendar.getInstance().getTime();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(currentTime);
+
+        return calendar.get(Calendar.DAY_OF_WEEK);
     }
 
     /**

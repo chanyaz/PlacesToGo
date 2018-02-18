@@ -15,7 +15,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.example.dangkhoa.placestogo.DetailActivity;
@@ -116,7 +115,7 @@ public class GooglePlacesAutoCompleteAdapter extends ArrayAdapter implements Fil
     @Override
     public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         if (convertView == null) {
-            convertView = LayoutInflater.from(this.context).inflate(R.layout.search_list_item, parent, false);
+            convertView = LayoutInflater.from(this.context).inflate(R.layout.list_item_search, parent, false);
         }
 
         if (mList != null) {

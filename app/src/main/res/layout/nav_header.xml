@@ -3,22 +3,36 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/side_nav_background"
-    android:padding="16dp"
     android:orientation="vertical"
+    android:padding="16dp"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <LinearLayout
-        android:layout_marginTop="12dp"
         android:id="@+id/imageLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/nav_imageView"
+        <RelativeLayout
             android:layout_width="95dp"
-            android:layout_height="95dp"
-            android:scaleType="centerCrop" />
+            android:layout_height="95dp">
+
+            <ImageView
+                android:id="@+id/nav_imageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop" />
+
+            <ProgressBar
+                android:id="@+id/image_loading_progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:indeterminateTint="@color/white"
+                android:visibility="gone" />
+
+        </RelativeLayout>
 
         <ImageView
             android:id="@+id/nav_CameraButton"
@@ -26,14 +40,14 @@
             android:layout_height="45dp"
             android:layout_gravity="bottom"
             android:padding="5dp"
-            android:src="@drawable/ic_camera_alt" />
+            android:src="@drawable/ic_camera_alt_selector" />
 
     </LinearLayout>
 
     <LinearLayout
-        android:layout_marginTop="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:orientation="vertical">
 
         <TextView

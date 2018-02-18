@@ -169,7 +169,7 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_place_list, container, false);
+        View view = inflater.inflate(R.layout.list_fragment_place, container, false);
 
         viewHolder = new ViewHolder(view);
 
