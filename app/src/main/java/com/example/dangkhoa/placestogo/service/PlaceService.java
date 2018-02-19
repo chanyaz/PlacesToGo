@@ -32,6 +32,7 @@ public class PlaceService extends IntentService {
     public static final String PLACE_LIST_KEY_RESPONSE = "key_response";
 
     private ArrayList<PlaceDetail> placeList;
+    private Location mLocation;
 
     // used to get next page token from the current request and send to main fragment
     private String nextPageTopen = null;
@@ -44,7 +45,7 @@ public class PlaceService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         String placeType = intent.getStringExtra(PLACE_TYPE_KEY);
-        Location location = intent.getParcelableExtra(CURRENT_LOCATION_KEY);
+        mLocation = intent.getParcelableExtra(CURRENT_LOCATION_KEY);
         String radius = intent.getStringExtra(RADIUS_KEY);
         String next_page_token = intent.getStringExtra(NEXT_PAGE_TOKEN_KEY);
 
@@ -52,7 +53,7 @@ public class PlaceService extends IntentService {
                 getApplicationContext(),
                 placeType,
                 radius,
-                new LatLng(location.getLatitude(), location.getLongitude()),
+                new LatLng(mLocation.getLatitude(), mLocation.getLongitude()),
                 next_page_token
         );
 
@@ -93,6 +94,13 @@ public class PlaceService extends IntentService {
 
                     JSONObject geometryObj = restaurantObj.getJSONObject(ServiceUtil.GEOMETRY);
                     JSONObject locationObj = geometryObj.getJSONObject(ServiceUtil.LOCATION);
+
+                    Location placeLocation = new Location("");
+                    placeLocation.setLatitude(locationObj.getDouble(ServiceUtil.LATITUDE));
+                    placeLocation.setLongitude(locationObj.getDouble(ServiceUtil.LONGITUDE));
+
+                    float distance = placeLocation.distanceTo(mLocation);
+                    placeDetail.setDistance(String.valueOf(distance));
 
                     placeDetail.setLatitude(locationObj.getDouble(ServiceUtil.LATITUDE));
                     placeDetail.setLongitude(locationObj.getDouble(ServiceUtil.LONGITUDE));

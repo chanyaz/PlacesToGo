@@ -4,9 +4,13 @@ import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.widget.RecyclerView;
 import android.transition.TransitionInflater;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +20,9 @@ import android.widget.TextView;
 
 import com.example.dangkhoa.placestogo.DetailActivity;
 import com.example.dangkhoa.placestogo.R;
+import com.example.dangkhoa.placestogo.Utils.Util;
 import com.example.dangkhoa.placestogo.data.PlaceDetail;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 
@@ -24,22 +30,31 @@ import java.util.ArrayList;
  * Created by dangkhoa on 29/09/2017.
  */
 
-public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.ViewHolder> {
+public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.ViewHolder> implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final int FLAG_PLACE_LIST_ADAPTER = 200;
 
     private Context mContext;
     private ArrayList<PlaceDetail> mList;
 
-    public PlaceListAdapter(Context context, ArrayList<PlaceDetail> list) {
+    private Location mLocation;
+    private String unit;
+
+    public PlaceListAdapter(Context context, ArrayList<PlaceDetail> list, Location location) {
         mContext = context;
         mList = list;
+        mLocation = location;
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        getSharedPreferences();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         public ImageView thumbnail;
-        public TextView resName, resAddress, resOpening;
+        public TextView resName, resAddress, resOpening, distanceTextView;
         public RatingBar ratingBar;
 
         public ViewHolder(View itemView) {
@@ -50,6 +65,7 @@ public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.View
             ratingBar = itemView.findViewById(R.id.ratingBar);
             resAddress = itemView.findViewById(R.id.item_locality);
             resOpening = itemView.findViewById(R.id.opening_text);
+            distanceTextView = itemView.findViewById(R.id.distanceTextView);
 
             itemView.setOnClickListener(this);
         }
@@ -68,7 +84,7 @@ public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.View
             intent.putExtra(DetailActivity.INTENT_PACKAGE, bundle);
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation((Activity)mContext, thumbnail, thumbnail.getTransitionName());
+                ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation((Activity) mContext, thumbnail, thumbnail.getTransitionName());
 
                 ((Activity) mContext).getWindow().setSharedElementEnterTransition(TransitionInflater.from(mContext).inflateTransition(R.transition.curve));
                 mContext.startActivity(intent, options.toBundle());
@@ -116,10 +132,33 @@ public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.View
             viewHolder.resOpening.setTextColor(mContext.getColor(R.color.red));
             viewHolder.resOpening.setText(mContext.getResources().getString(R.string.closed_now));
         }
+
+        String distanceText = Util.convertMeterTo(mContext, unit, Float.parseFloat(placeDetail.getDistance()));
+        viewHolder.distanceTextView.setText(distanceText);
     }
 
     @Override
     public int getItemCount() {
         return mList.size();
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        getSharedPreferences();
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        PreferenceManager.getDefaultSharedPreferences(mContext).unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    private void getSharedPreferences() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+
+        unit = sharedPreferences.getString(mContext.getString(R.string.pref_unit_key), mContext.getString(R.string.pref_unit_kilometers_value));
+
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 }

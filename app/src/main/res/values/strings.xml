@@ -40,6 +40,13 @@
 
     <string name="current_location">Current location</string>
 
+    <string name="distance">Distance</string>
+    <string name="alphabet">Alphabet</string>
+    <string name="opening">Opening</string>
+
+    <string name="sort_by">Sort by</string>
+    <string name="compare_2_places">Compare 2 places</string>
+
     <!-- Settings preferences -->
 
     <!-- Label for the Unit List Preference -->
@@ -170,97 +177,6 @@
     <string name="bus_station">Bus station</string>
     <string name="more">More</string>
 
-    <string name="accounting_label">Accounting</string>
-    <string name="airport_label">Airport</string>
-    <string name="amusement_park_label">Amusement Park</string>
-    <string name="aquarium_label">Aquarium</string>
-    <string name="art_gallery_label">Art Gallery</string>
-    <string name="atm_label">ATM</string>
-    <string name="bakery_label">Bakery</string>
-    <string name="bank_label">Bank</string>
-    <string name="bar_label">Bar</string>
-    <string name="beauty_salon_label">Beauty Salon</string>
-    <string name="bicycle_store_label">Bicycle Store</string>
-    <string name="book_store_label">Book Store</string>
-    <string name="bowling_alley_label">Bowling Alley</string>
-    <string name="bus_station_label">Bus Station</string>
-    <string name="cafe_label">Cafe</string>
-    <string name="campground_label">Campground</string>
-    <string name="car_dealer_label">Car Dealer</string>
-    <string name="car_rental_label">Car Rental</string>
-    <string name="car_repair_label">Car Repair</string>
-    <string name="car_wash_label">Car Wash</string>
-    <string name="casino_label">Casino</string>
-    <string name="cemetery_label">Cemetery</string>
-    <string name="church_label">Church</string>
-    <string name="city_hall_label">City Hall</string>
-    <string name="clothing_store_label">Clothing Store</string>
-    <string name="convenience_store_label">Convenience Store</string>
-    <string name="courthouse_label">Courthouse</string>
-    <string name="dentist_label">Dentist</string>
-    <string name="department_store_label">Department Store</string>
-    <string name="doctor_label">Doctor</string>
-    <string name="electrician_label">Electrician</string>
-    <string name="electronics_store_label">Electronics Store</string>
-    <string name="embassy_label">Embassy</string>
-    <string name="fire_station_label">Fire Station</string>
-    <string name="florist_label">Florist</string>
-    <string name="funeral_home_label">Funeral Home</string>
-    <string name="furniture_store_label">Furniture Store</string>
-    <string name="gas_station_label">Gas Station</string>
-    <string name="gym_label">Gym</string>
-    <string name="hair_care_label">Hair Care</string>
-    <string name="hardware_store_label">Hardware Store</string>
-    <string name="hindu_temple_label">Hindu Temple</string>
-    <string name="home_goods_store_label">Home Goods Store</string>
-    <string name="hospital_label">Hospital</string>
-    <string name="insurance_agency_label">Insurance Agency</string>
-    <string name="jewelry_store_label">Jewelry Store</string>
-    <string name="laundry_label">Laundry</string>
-    <string name="lawyer_label">Lawyer</string>
-    <string name="library_label">Library</string>
-    <string name="liquor_store_label">Liquor Store</string>
-    <string name="local_government_office_label">Local Government Office</string>
-    <string name="locksmith_label">Locksmith</string>
-    <string name="lodging_label">Lodging</string>
-    <string name="meal_delivery_label">Meal Delivery</string>
-    <string name="meal_takeaway_label">Meal Takeaway</string>
-    <string name="mosque_label">Mosque</string>
-    <string name="movie_rental_label">Movie Rental</string>
-    <string name="movie_theater_label">Movie Theater</string>
-    <string name="moving_company_label">Moving Company</string>
-    <string name="museum_label">Museum</string>
-    <string name="night_club_label">Night Club</string>
-    <string name="painter_label">Painter</string>
-    <string name="park_label">Park</string>
-    <string name="parking_label">Parking</string>
-    <string name="pet_store_label">Pet Store</string>
-    <string name="pharmacy_label">Pharmacy</string>
-    <string name="physiotherapist_label">Physiotherapist</string>
-    <string name="plumber_label">Plumber</string>
-    <string name="police_label">Police</string>
-    <string name="post_office_label">Post Office</string>
-    <string name="real_estate_agency_label">Real Estate Agency</string>
-    <string name="restaurant_label">Restaurant</string>
-    <string name="roofing_contractor_label">Roofing Contractor</string>
-    <string name="rv_park_label">Rv Park</string>
-    <string name="school_label">School</string>
-    <string name="shoe_store_label">Shoe Store</string>
-    <string name="shopping_mall_label">Shopping Mall</string>
-    <string name="spa_label">Spa</string>
-    <string name="stadium_label">Stadium</string>
-    <string name="storage_label">Storage</string>
-    <string name="store_label">Store</string>
-    <string name="subway_station_label">Subway Station</string>
-    <string name="synagogue_label">Synagogue</string>
-    <string name="taxi_stand_label">Taxi Stand</string>
-    <string name="train_station_label">Train Station</string>
-    <string name="transit_station_label">Transit Station</string>
-    <string name="travel_agency_label">Travel Agency</string>
-    <string name="university_label">University</string>
-    <string name="veterinary_care_label">Veterinary Care</string>
-    <string name="zoo_label">Zoo</string>
-
     <string name="place_types">Place types</string>
     <string name="search">Search</string>
     <string name="location_unavailable">Your location is unavailable</string>
@@ -375,10 +291,6 @@
         completions."
     </string>
     <string name="title_activity_photo">PhotoActivity</string>
-    <string name="tab_text_1">Tab 1</string>
-    <string name="tab_text_2">Tab 2</string>
-    <string name="tab_text_3">Tab 3</string>
-    <string name="section_format">Hello World from section: %1$d</string>
 
 
 </resources>

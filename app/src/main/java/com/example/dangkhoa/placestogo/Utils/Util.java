@@ -1,6 +1,5 @@
 package com.example.dangkhoa.placestogo.Utils;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,14 +8,11 @@ import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 
 import com.example.dangkhoa.placestogo.R;
-import com.example.dangkhoa.placestogo.data.PlaceDetail;
-import com.example.dangkhoa.placestogo.database.DBContract;
-import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.maps.model.LatLng;
 
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -193,6 +189,10 @@ public class Util {
         }
     }
 
+    private static final float kilometerConst = 1000f;
+    private static final float mileConst = 1609.34f;
+    private static DecimalFormat decimalFormat = new DecimalFormat("0.00");
+
     /**
      * Convert radius in mile and kilometer into meter
      *
@@ -202,13 +202,19 @@ public class Util {
      * @return
      */
     public static String radiusInMeter(Context context, float radius, String unit) {
-        float kilometerConst = 1000f;
-        float mileConst = 1609.34f;
 
         if (unit.equals(context.getString(R.string.pref_unit_miles_value))) {
             return String.valueOf(radius * mileConst);
         } else {
             return String.valueOf(radius * kilometerConst);
+        }
+    }
+
+    public static String convertMeterTo(Context context, String type, float meter) {
+        if (type.equals(context.getString(R.string.pref_unit_kilometers_value))) {
+            return decimalFormat.format(meter / kilometerConst) + "km";
+        } else {
+            return decimalFormat.format(meter / mileConst) + "mi";
         }
     }
 
@@ -232,6 +238,7 @@ public class Util {
 
     /**
      * Get day of week
+     *
      * @return an integer (1: Sunday, 2: Monday, 3:...)
      */
     public static int getDayOfWeek() {

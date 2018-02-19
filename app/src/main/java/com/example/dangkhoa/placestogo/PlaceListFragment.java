@@ -18,9 +18,13 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import com.example.dangkhoa.placestogo.RecyclerViewDecoration.PlaceListItemSpacing;
 import com.example.dangkhoa.placestogo.Utils.NetworkUtil;
@@ -30,6 +34,8 @@ import com.example.dangkhoa.placestogo.data.PlaceDetail;
 import com.example.dangkhoa.placestogo.service.PlaceService;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * Created by dangkhoa on 29/09/2017.
@@ -45,8 +51,16 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
     public static final String PLACE_TYPE_BUNDLE_KEY = "place_type_bundle_key";
 
     private static final String PLACE_LIST_SAVE_KEY = "place_list_save_key";
-    private static final String RECYCLER_VIEW_STATE_SAVE_KEY = "recyler_view_state_save_key";
+    private static final String RECYCLER_VIEW_STATE_SAVE_KEY = "recycler_view_state_save_key";
     private static final String NEXT_PAGE_TOKEN_SAVE_KEY = "next_page_token_save_key";
+    private static final String SORT_MODE_SAVE_KEY = "sort_mode_save_key";
+
+    private static final int SORT_BY_DISTANCE = 0;
+    private static final int SORT_BY_OPENING = 1;
+    private static final int SORT_BY_ALPHABET = 2;
+    private static final int SORT_BY_RATING = 3;
+
+    private int SORT_MODE = -1;
 
     private boolean requestLocationOnNetworkReconnected = false;
 
@@ -103,10 +117,12 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
 
         public SwipeRefreshLayout mSwipeRefreshLayout;
         public RecyclerView mRecyclerView;
+        public Spinner sortSpinner;
 
         public ViewHolder(View view) {
             mSwipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
             mRecyclerView = view.findViewById(R.id.recyclerView);
+            sortSpinner = view.findViewById(R.id.sortSpinner);
         }
     }
 
@@ -116,6 +132,7 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
             outState.putParcelableArrayList(PLACE_LIST_SAVE_KEY, mPlaceList);
             outState.putParcelable(RECYCLER_VIEW_STATE_SAVE_KEY, viewHolder.mRecyclerView.getLayoutManager().onSaveInstanceState());
             outState.putString(NEXT_PAGE_TOKEN_SAVE_KEY, mNextPageToken);
+            outState.putInt(SORT_MODE_SAVE_KEY, SORT_MODE);
         }
 
         // these information is retrieved from main activity
@@ -145,6 +162,7 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
             mLastLocation = savedInstanceState.getParcelable(LOCATION_BUNDLE_KEY);
             mPlaceType = savedInstanceState.getString(PLACE_TYPE_BUNDLE_KEY);
             mNextPageToken = savedInstanceState.getString(NEXT_PAGE_TOKEN_SAVE_KEY);
+            SORT_MODE = savedInstanceState.getInt(SORT_MODE_SAVE_KEY);
         } else {
             Bundle arguments = getArguments();
             if (arguments != null) {
@@ -153,9 +171,12 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
             }
         }
         mPlaceList = new ArrayList<>();
-        placeListAdapter = new PlaceListAdapter(getContext(), mPlaceList);
+        placeListAdapter = new PlaceListAdapter(getContext(), mPlaceList, mLastLocation);
     }
 
+    /**
+     * Get shared preferences
+     */
     private void setupSharedPreferences() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 
@@ -219,6 +240,8 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
             }
         });
 
+        setupSpinner();
+
         // only get saved list when the list was saved
         // if it was not saved because the service had not finished
         // we'll start service again
@@ -243,6 +266,17 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
         return view;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getContext().unregisterReceiver(receiver);
+        getContext().unregisterReceiver(networkChangeReceiver);
+        PreferenceManager.getDefaultSharedPreferences(getContext()).unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    /**
+     * Reset next page token and position to scroll to in recycler view
+     */
     private void resetOffsetAndNextPageToken() {
         mPositionToScrollTo = 0;
         mNextPageToken = null;
@@ -308,6 +342,11 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
         }
     }
 
+    /**
+     * Update RecyclerView with the place list
+     *
+     * @param results
+     */
     private void updateUI(ArrayList<PlaceDetail> results) {
         mIsRefreshing = false;
         viewHolder.mSwipeRefreshLayout.setRefreshing(mIsRefreshing);
@@ -333,6 +372,22 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
         // starting from the very last item of the adapter list
         placeListAdapter.notifyItemRangeInserted(currentSize, results.size());
 
+        switch (SORT_MODE) {
+            case SORT_BY_DISTANCE:
+                sortByDistance();
+                break;
+            case SORT_BY_OPENING:
+                sortByOpening();
+                break;
+            case SORT_BY_ALPHABET:
+                sortByAlphabet();
+                break;
+            case SORT_BY_RATING:
+                sortByRating();
+                break;
+            default:
+                // do nothing
+        }
         viewHolder.mRecyclerView.setAdapter(placeListAdapter);
 
         if (hasSavedState) {
@@ -348,12 +403,117 @@ public class PlaceListFragment extends Fragment implements SharedPreferences.OnS
         ((PlacesCallback) getContext()).placesListAchieved(mPlaceList);
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        getContext().unregisterReceiver(receiver);
-        getContext().unregisterReceiver(networkChangeReceiver);
-        PreferenceManager.getDefaultSharedPreferences(getContext()).unregisterOnSharedPreferenceChangeListener(this);
+    /**
+     * Setup Spinner for sorting
+     */
+    private void setupSpinner() {
+        String[] sortArrays = {
+                getContext().getString(R.string.distance),
+                getContext().getString(R.string.opening),
+                getContext().getString(R.string.alphabet),
+                getContext().getString(R.string.rate)
+        };
+
+        ArrayAdapter spinnerAdapter = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_dropdown_item, sortArrays);
+        viewHolder.sortSpinner.setAdapter(spinnerAdapter);
+
+        viewHolder.sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+                switch (position) {
+                    case SORT_BY_DISTANCE:
+                        SORT_MODE = SORT_BY_DISTANCE;
+                        sortByDistance();
+                        break;
+                    case SORT_BY_OPENING:
+                        SORT_MODE = SORT_BY_OPENING;
+                        sortByOpening();
+                        break;
+                    case SORT_BY_ALPHABET:
+                        SORT_MODE = SORT_BY_ALPHABET;
+                        sortByAlphabet();
+                        break;
+                    case SORT_BY_RATING:
+                        SORT_MODE = SORT_BY_RATING;
+                        sortByRating();
+                        break;
+                    default:
+                        // do nothing
+                }
+                placeListAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+    }
+
+    /**
+     * Sort by opening: places opening are placed on top
+     */
+    private void sortByOpening() {
+        Collections.sort(mPlaceList, new Comparator<PlaceDetail>() {
+            @Override
+            public int compare(PlaceDetail placeDetail1, PlaceDetail placeDetail2) {
+                if (placeDetail1.getOpening() >= placeDetail2.getOpening()) {
+                    return -1;
+                }
+                if (placeDetail1.getOpening() < placeDetail2.getOpening()) {
+                    return 1;
+                }
+                return 0;
+            }
+        });
+    }
+
+    /**
+     * Sort by distance: places nearest the current user's location are placed on top
+     */
+    private void sortByDistance() {
+        Collections.sort(mPlaceList, new Comparator<PlaceDetail>() {
+            @Override
+            public int compare(PlaceDetail placeDetail1, PlaceDetail placeDetail2) {
+                if (Float.parseFloat(placeDetail1.getDistance()) < Float.parseFloat(placeDetail2.getDistance())) {
+                    return -1;
+                }
+                if (Float.parseFloat(placeDetail1.getDistance()) >= Float.parseFloat(placeDetail2.getDistance())) {
+                    return 1;
+                }
+                return 0;
+            }
+        });
+    }
+
+    /**
+     * Sort by alphabet: places are placed in alphabet order
+     */
+    private void sortByAlphabet() {
+        Collections.sort(mPlaceList, new Comparator<PlaceDetail>() {
+            @Override
+            public int compare(PlaceDetail placeDetail1, PlaceDetail placeDetail2) {
+                return placeDetail1.getName().compareTo(placeDetail2.getName());
+            }
+        });
+    }
+
+    /**
+     * Sort by rating: places with higher rating are placed on top
+     */
+    private void sortByRating() {
+        Collections.sort(mPlaceList, new Comparator<PlaceDetail>() {
+            @Override
+            public int compare(PlaceDetail placeDetail1, PlaceDetail placeDetail2) {
+                if (placeDetail1.getRating() >= placeDetail2.getRating()) {
+                    return -1;
+                }
+                if (placeDetail1.getRating() < placeDetail2.getRating()) {
+                    return 1;
+                }
+                return 0;
+            }
+        });
     }
 
     public class PlaceServiceReceiver extends BroadcastReceiver {

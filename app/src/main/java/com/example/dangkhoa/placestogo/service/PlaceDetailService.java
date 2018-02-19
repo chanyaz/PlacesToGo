@@ -2,6 +2,7 @@ package com.example.dangkhoa.placestogo.service;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.Log;

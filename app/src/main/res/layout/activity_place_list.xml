@@ -10,15 +10,17 @@
         android:layout_height="match_parent">
 
         <android.support.design.widget.AppBarLayout
-            app:theme="@style/AppTheme.AppBarOverlay"
+            app:elevation="0dp"
             android:layout_width="match_parent"
-            android:layout_height="?actionBarSize">
+            android:layout_height="wrap_content"
+            app:theme="@style/AppTheme.AppBarOverlay">
 
             <android.support.v7.widget.Toolbar
-                app:popupTheme="@style/AppTheme.PopupOverlay"
                 android:id="@+id/place_activity_toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"></android.support.v7.widget.Toolbar>
+                android:layout_height="?actionBarSize"
+                app:popupTheme="@style/AppTheme.PopupOverlay"
+                app:layout_scrollFlags="scroll|enterAlways"></android.support.v7.widget.Toolbar>
 
         </android.support.design.widget.AppBarLayout>
 

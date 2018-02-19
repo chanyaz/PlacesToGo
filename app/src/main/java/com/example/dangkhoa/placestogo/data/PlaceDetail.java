@@ -19,6 +19,10 @@ public class PlaceDetail implements Parcelable {
     private double latitude;
     private double longitude;
 
+    // this distance variable is temporary. It is used for sorting the list
+    // this variable will not be saved in database
+    private String distance;
+
     private double rating;
 
     private int opening; // 0 if closed
@@ -191,6 +195,14 @@ public class PlaceDetail implements Parcelable {
         this.openingHours = openingHours;
     }
 
+    public String getDistance() {
+        return distance;
+    }
+
+    public void setDistance(String distance) {
+        this.distance = distance;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -212,6 +224,7 @@ public class PlaceDetail implements Parcelable {
         internationalPhone = in.readString();
         in.readTypedList(reviews, Review.CREATOR);
         in.readStringList(openingHours);
+        distance = in.readString();
     }
 
     @Override
@@ -231,6 +244,7 @@ public class PlaceDetail implements Parcelable {
         dest.writeString(internationalPhone);
         dest.writeTypedList(reviews);
         dest.writeStringList(openingHours);
+        dest.writeString(distance);
     }
 
 }

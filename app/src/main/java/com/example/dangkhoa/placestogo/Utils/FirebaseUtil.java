@@ -180,6 +180,9 @@ public class FirebaseUtil {
         ArrayList<Review> backupList = placeDetail.getReviews();
 
         placeDetail.setReviews(null);
+        // do not save distance to firebase because distance in this case is just relative the native user
+        placeDetail.setDistance(null);
+
         // store place detail
         placeRef.child(PLACE_DETAIL_CHILD).setValue(placeDetail);
 
